@@ -1,4 +1,5 @@
 const express = require('express');
+const reqProm = require('request-promise');
 const app = express();
 const PORT = 8080;
 
@@ -6,6 +7,9 @@ const urlDatabase = {
   "b2xVn2": "http://lighthouselabs.ca",
   "9sm5xK": "http://www.google.com",
 };
+
+let hipsumText;
+const hipsumFetch = () => reqProm("http://hipsum.co/api/?type=hipster-centric&sentences=3");
 
 app.set('view engine', 'ejs');
 
@@ -28,10 +32,20 @@ app.get('/helloWorld', (req, res) => {
   console.log("Client request for /helloWorld");
 })
 app.get('/hipsum', (req, res) => {
-  res.render('hipsum');
-  console.log("Request Method: ", req.method);
-  console.log("Request URL: ", req.url);
-  console.log("Client request for /hipsum");
+  hipsumFetch()
+  .then(data => {
+    console.log("Data fetch for hipsum successful: data");
+    hipsumText = JSON.parse(data);
+    res.render('hipsum', { hipsumText: hipsumText });
+    console.log("Request Method: ", req.method);
+    console.log("Request URL: ", req.url);
+    console.log("Client request for /hipsum");
+  })
+  .catch(error => {
+    console.log(error);
+      res.redirect('views/pages/404');
+  });
+  
 })
 
 app.listen(PORT, () => {

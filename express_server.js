@@ -16,7 +16,7 @@ app.get('/', (req, res) => {
   console.log("Client request for root");
 })
 app.get('/urls.json', (req, res) => {
-  res.json(urlDatabase);
+  res.send(urlDatabase);
   console.log("Request Method: ", req.method);
   console.log("Request URL: ", req.url);
   console.log("Client request for /urls.json");

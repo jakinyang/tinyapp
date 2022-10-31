@@ -16,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/jakinyang/tinyapp/issues"
   },
-  "homepage": "https://github.com/jakinyang/tinyapp#readme"
+  "homepage": "https://github.com/jakinyang/tinyapp#readme",
+  "dependencies": {
+    "express": "^4.18.2"
+  }
 }

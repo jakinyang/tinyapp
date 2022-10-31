@@ -11,19 +11,26 @@ app.set('view engine', 'ejs');
 
 app.get('/', (req, res) => {
   res.send("Hello World!");
-  console.log(request);
+  console.log("Request Method: ", req.method);
+  console.log("Request URL: ", req.url);
   console.log("Client request for root");
 })
 app.get('/urls.json', (req, res) => {
   res.json(urlDatabase);
+  console.log("Request Method: ", req.method);
+  console.log("Request URL: ", req.url);
   console.log("Client request for /urls.json");
 })
 app.get('/helloWorld', (req, res) => {
   res.send("<html><body><h1>Hello World!</h1></body></html>");
+  console.log("Request Method: ", req.method);
+  console.log("Request URL: ", req.url);
   console.log("Client request for /helloWorld");
 })
 app.get('/hipsum', (req, res) => {
   res.render('hipsum');
+  console.log("Request Method: ", req.method);
+  console.log("Request URL: ", req.url);
   console.log("Client request for /hipsum");
 })
 

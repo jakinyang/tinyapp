@@ -2,6 +2,8 @@
 const express = require('express');
 // Require request-promise for learning/experimenting
 const reqProm = require('request-promise');
+// Requiring randomStringGen
+const { randomStringGen } = require('./randomGenerator');
 // Assign the server instance to a const
 const app = express();
 
@@ -21,20 +23,29 @@ const hipsumFetch = () => reqProm("http://hipsum.co/api/?type=hipster-centric&se
 
 // Main code
 
-// Handling post request from urls/new
-app.post('/urls', (req, res) => {
-  console.log("Request body:\n", req.body);
-  console.log("longURL: ", req.body.longURL);
-  console.log("Request Method: ", req.method);
-  console.log("Request URL: ", req.url);
-  console.log("Client post request for /url/new");
-})
+// Random id generator
+// randomStringGen()
 
 // View engine that will render ejs as html
 app.set('view engine', 'ejs');
 
 // Middle ware to take in form POST and encode as url
 app.use(express.urlencoded({ extended: true}));
+
+// Handling post request from urls/new
+app.post('/urls', (req, res) => {
+  console.log("Request Method: ", req.method);
+  console.log("Request URL: ", req.url);
+  console.log("Client post request from /url/new");
+  let newkey = randomStringGen();
+  console.log("New longURL posted: ", req.body.longURL);
+  console.log("New shortURL id: ", req.body.longURL);
+  urlDatabase[newkey] = req.body.longURL;
+  console.log(urlDatabase);
+  res.redirect(`/urls/${newkey}`);
+})
+
+// Handling post redirect
 
 // Route for get for root
 app.get('/', (req, res) => {
@@ -71,9 +82,19 @@ app.get('/urls/new', (req, res) => {
 
 // Route to page for given id's url
 app.get('/urls/:id', (req, res) => {
-  console.log(req);
-  const templateVars = { id: req.params.id, longURL: urlDatabase[this.id]};
+  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id], };
   res.render('urls_show', (templateVars));
+  console.log("longURL: ", templateVars.longURL);
+  console.log("Request Method: ", req.method);
+  console.log("Request URL: ", req.url);
+  console.log("Client request for /urls/id");
+});
+
+// Route for short url redirect
+app.get('/u/:id', (req, res) => {
+  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id], };
+  res.redirect(templateVars.longURL);
+  console.log("longURL: ", templateVars.longURL);
   console.log("Request Method: ", req.method);
   console.log("Request URL: ", req.url);
   console.log("Client request for /urls/id");

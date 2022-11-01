@@ -61,11 +61,10 @@ app.post('/urls/:id/delete', (req, res) => {
 // Handling post update request from urls/:id/
 app.post('/urls/:id', (req, res) => {
   const templateVars = { id: req.params.id, longURL: req.body.longURL, };
-  console.log(req.body.longURL);
   console.log(urlDatabase);
   urlDatabase[req.params.id] = req.body.longURL;
   console.log(urlDatabase);
-  res.redirect(`/urls/${templateVars.id}`);
+  res.redirect(`/urls/${req.params.id}`);
   console.log("id: ", req.params.id);
   console.log("longURL: ", req.body.longURL);
   console.log("Request Method: ", req.method);

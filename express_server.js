@@ -23,9 +23,6 @@ const hipsumFetch = () => reqProm("http://hipsum.co/api/?type=hipster-centric&se
 
 // Main code
 
-// Random id generator
-// randomStringGen()
-
 // View engine that will render ejs as html
 app.set('view engine', 'ejs');
 

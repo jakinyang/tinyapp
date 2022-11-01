@@ -25,6 +25,13 @@ app.get('/urls.json', (req, res) => {
   console.log("Request URL: ", req.url);
   console.log("Client request for /urls.json");
 })
+app.get('/urls', (req, res) => {
+  const templateVars = {urls: urlDatabase};
+  res.render('urls_index', templateVars);
+  console.log("Request Method: ", req.method);
+  console.log("Request URL: ", req.url);
+  console.log("Client request for /urls");
+})
 app.get('/helloWorld', (req, res) => {
   res.send("<html><body><h1>Hello World!</h1></body></html>");
   console.log("Request Method: ", req.method);
@@ -43,7 +50,7 @@ app.get('/hipsum', (req, res) => {
   })
   .catch(error => {
     console.log(error);
-      res.redirect('views/pages/404');
+    res.redirect('pages/404');
   });
   
 })

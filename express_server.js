@@ -45,7 +45,18 @@ app.post('/urls', (req, res) => {
   res.redirect(`/urls/${newkey}`);
 })
 
-// Handling post redirect
+// Handling post delete request from urls/:id/delete
+app.post('/urls/:id/delete', (req, res) => {
+  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id], };
+  console.log(urlDatabase);
+  delete urlDatabase[templateVars.id];
+  console.log(urlDatabase);
+  res.redirect('/urls');
+  console.log("longURL: ", templateVars.longURL);
+  console.log("Request Method: ", req.method);
+  console.log("Request URL: ", req.url);
+  console.log(`Client request for post delete /urls/${templateVars.id}/delete`);
+});
 
 // Route for get for root
 app.get('/', (req, res) => {

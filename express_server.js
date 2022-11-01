@@ -34,13 +34,19 @@ app.get('/urls', (req, res) => {
   console.log("Request URL: ", req.url);
   console.log("Client request for /urls");
 });
+app.get('/urls/new', (req, res) => {
+  res.render('urls_new');
+  console.log("Request Method: ", req.method);
+  console.log("Request URL: ", req.url);
+  console.log("Client request for /urls/new");
+});
 app.get('/urls/:id', (req, res) => {
   console.log(req);
   const templateVars = { id: req.params.id, longURL: urlDatabase[this.id]};
   res.render('urls_show', (templateVars));
   console.log("Request Method: ", req.method);
   console.log("Request URL: ", req.url);
-  console.log("Client request for /urls");
+  console.log("Client request for /urls/id");
 });
 app.get('/helloWorld', (req, res) => {
   res.send("<html><body><h1>Hello World!</h1></body></html>");

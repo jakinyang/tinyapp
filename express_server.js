@@ -18,13 +18,13 @@ app.get('/', (req, res) => {
   console.log("Request Method: ", req.method);
   console.log("Request URL: ", req.url);
   console.log("Client request for root");
-})
+});
 app.get('/urls.json', (req, res) => {
   res.send(urlDatabase);
   console.log("Request Method: ", req.method);
   console.log("Request URL: ", req.url);
   console.log("Client request for /urls.json");
-})
+});
 
 // Render url page with table of urls IDs and long urls
 app.get('/urls', (req, res) => {
@@ -33,7 +33,7 @@ app.get('/urls', (req, res) => {
   console.log("Request Method: ", req.method);
   console.log("Request URL: ", req.url);
   console.log("Client request for /urls");
-})
+});
 app.get('/urls/:id', (req, res) => {
   console.log(req);
   const templateVars = { id: req.params.id, longURL: urlDatabase[this.id]};
@@ -41,30 +41,30 @@ app.get('/urls/:id', (req, res) => {
   console.log("Request Method: ", req.method);
   console.log("Request URL: ", req.url);
   console.log("Client request for /urls");
-})
+});
 app.get('/helloWorld', (req, res) => {
   res.send("<html><body><h1>Hello World!</h1></body></html>");
   console.log("Request Method: ", req.method);
   console.log("Request URL: ", req.url);
   console.log("Client request for /helloWorld");
-})
+});
 app.get('/hipsum', (req, res) => {
   hipsumFetch()
-  .then(data => {
-    console.log("Data fetch for hipsum successful: data");
-    hipsumText = JSON.parse(data);
-    res.render('hipsum', { hipsumText: hipsumText });
-    console.log("Request Method: ", req.method);
-    console.log("Request URL: ", req.url);
-    console.log("Client request for /hipsum");
-  })
-  .catch(error => {
-    console.log(error);
-    res.redirect('pages/404');
-  });
+    .then(data => {
+      console.log("Data fetch for hipsum successful: data");
+      hipsumText = JSON.parse(data);
+      res.render('hipsum', { hipsumText: hipsumText });
+      console.log("Request Method: ", req.method);
+      console.log("Request URL: ", req.url);
+      console.log("Client request for /hipsum");
+    })
+    .catch(error => {
+      console.log(error);
+      res.redirect('pages/404');
+    });
   
-})
+});
 
 app.listen(PORT, () => {
   console.log(`Express server up: listening on port ${PORT}`);
-})
+});

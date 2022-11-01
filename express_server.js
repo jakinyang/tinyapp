@@ -25,7 +25,16 @@ app.get('/urls.json', (req, res) => {
   console.log("Request URL: ", req.url);
   console.log("Client request for /urls.json");
 })
+
+// Render url page with table of urls IDs and long urls
 app.get('/urls', (req, res) => {
+  const templateVars = {urls: urlDatabase};
+  res.render('urls_index', templateVars);
+  console.log("Request Method: ", req.method);
+  console.log("Request URL: ", req.url);
+  console.log("Client request for /urls");
+})
+app.get('/urls:id', (req, res) => {
   const templateVars = {urls: urlDatabase};
   res.render('urls_index', templateVars);
   console.log("Request Method: ", req.method);

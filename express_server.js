@@ -58,6 +58,22 @@ app.post('/urls/:id/delete', (req, res) => {
   console.log(`Client request for post delete /urls/${templateVars.id}/delete`);
 });
 
+// Handling post update request from urls/:id/
+app.post('/urls/:id', (req, res) => {
+  const templateVars = { id: req.params.id, longURL: req.body.longURL, };
+  console.log(req);
+  console.log(req.body.longURL);
+  console.log(urlDatabase);
+  urlDatabase[req.params.id] = req.body.longURL;
+  console.log(urlDatabase);
+  res.redirect(`/urls/${templateVars.id}`);
+  console.log("id: ", req.params.id);
+  console.log("longURL: ", req.body.longURL);
+  console.log("Request Method: ", req.method);
+  console.log("Request URL: ", req.url);
+  console.log(`Client request for post update /urls/${templateVars.id} to ${req.body.longURL}`);
+});
+
 // Route for get for root
 app.get('/', (req, res) => {
   res.send("Hello World!");

@@ -61,7 +61,6 @@ app.post('/urls/:id/delete', (req, res) => {
 // Handling post update request from urls/:id/
 app.post('/urls/:id', (req, res) => {
   const templateVars = { id: req.params.id, longURL: req.body.longURL, };
-  console.log(req);
   console.log(req.body.longURL);
   console.log(urlDatabase);
   urlDatabase[req.params.id] = req.body.longURL;

@@ -12,13 +12,17 @@
     "url": "git+https://github.com/jakinyang/tinyapp.git"
   },
   "keywords": [],
-  "author": {"name": "Jae Chun Yang", "email": "109392405+jakinyang@users.noreply.github.com"},
+  "author": {
+    "name": "Jae Chun Yang",
+    "email": "109392405+jakinyang@users.noreply.github.com"
+  },
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/jakinyang/tinyapp/issues"
   },
   "homepage": "https://github.com/jakinyang/tinyapp#readme",
   "dependencies": {
+    "cookie-parser": "^1.4.6",
     "ejs": "^3.1.8",
     "express": "^4.18.2",
     "request": "^2.88.2",

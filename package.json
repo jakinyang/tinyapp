@@ -4,14 +4,15 @@
   "description": "",
   "main": "app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "./node_modules/.bin/nodemon -L express_server.js"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/jakinyang/tinyapp.git"
   },
   "keywords": [],
-  "author": "",
+  "author": {"name": "Jae Chun Yang", "email": "109392405+jakinyang@users.noreply.github.com"},
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/jakinyang/tinyapp/issues"

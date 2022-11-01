@@ -34,7 +34,7 @@ app.get('/urls', (req, res) => {
   console.log("Request URL: ", req.url);
   console.log("Client request for /urls");
 })
-app.get('/urls:id', (req, res) => {
+app.get('/urls/:id', (req, res) => {
   const templateVars = { id: req.params.id, longURL: urlDatabase[id]};
   res.render('urls_show', (templateVars));
   console.log("Request Method: ", req.method);

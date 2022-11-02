@@ -110,38 +110,48 @@ app.post('/urls/:id', (req, res) => {
 app.post('/login', (req, res) => {
   const password = req.body.password;
   const email = req.body.email;
-
+  console.log("Cookies", req.cookies.badLogin);
   // If they are not logged in
   // They don't have one of the loginTokens or they don't have both loginTokens
   if (!req.cookies.loginTokenID || !req.cookies.loginTokenPass) {
+    console.log("No loginTokens detected");
+    console.log("Cycling through userDatabase");
+    console.log("Current user input email", email);
+    console.log("Current user input password", password);
     for (let id in userDatabase) {
-      if (id.email === email && id.password === password) {
+      console.log("Current database email", userDatabase[id]['email']);
+      console.log("Current database password", userDatabase[id]['password']);
+      console.log("Current user input email", email);
+      console.log("Current database password", password);
+      if (userDatabase[id]['email'] === email && userDatabase[id]['password'] === password) {
         res.cookie('loginTokenID', id);
-        res.cookie('loginTokenPass', id.password);
+        res.cookie('loginTokenPass', userDatabase[id]['password']);
         if (req.cookies.badLogin) {
+          console.log("Clearing badLogin token");
           res.clearCookie('badLogin');
         }
+        console.log("Redirecting to /urls");
         return res.redirect('/urls');
     }
+    console.log("No user input matches in userDatabase");
     if (!req.cookies.badLogin) {
+      console.log("Applying badLoginToken");
       res.cookie('badLogin', true);
     }
-    res.redirect('/login')
+    console.log("Redirecting to /login");
+    console.log('<<--------------------->>');
+    return res.redirect('/login');
+    }
   }
-
   // If they are logged in
   // They have both loginTokens
-  res.redirect('/urls')
-  // Test console logs
-
-  res.cookie('username', username);
-  res.redirect('/urls');
-  console.log("cookies:", req.cookies);
-  console.log("username: ", username);
+  console.log('Login tokens detected');
+  console.log('Redirecting to /urls');
   console.log("request body: ", req.body);
   console.log("Request Method: ", req.method);
   console.log("Request URL: ", req.url);
   console.log('<<--------------------->>');
+  return res.redirect('/urls')
 });
 
 // Handling post request for /logout
@@ -190,6 +200,10 @@ app.post('/register', (req, res) => {
   console.log("Request URL: ", req.url);
   console.log('<<--------------------->>');
 });
+
+// 
+// GET HANDLERS
+// 
 
 // Route for get for root
 app.get('/', (req, res) => {

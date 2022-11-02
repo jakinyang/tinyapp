@@ -109,6 +109,22 @@ app.post('/urls/:id', (req, res) => {
 // Handling post request for /login
 app.post('/login', (req, res) => {
   const username = req.body.username;
+  const password = req.body.password;
+  const email = req.body.email;
+  let cookieObj;
+
+  if (!req.cookies.loginTokenID || !req.cookies.loginTokenPass) {
+    for (let id in userDatabase) {
+      if(id.email !== email || id.password !== password) {
+        res.cookie('badLogin', true);
+        res.redirect('/login')
+      }
+    }
+    // Test console logs
+    return res.redirect('/urls');
+  }
+  res.redirect('/urls')
+
   res.cookie('username', username);
   res.redirect('/urls');
   console.log("cookies:", req.cookies);
@@ -145,6 +161,7 @@ app.post('/register', (req, res) => {
       email,
       password,
     };
+    // Test console logs
     console.log("request body: ", req.body);
     console.log("email: ", req.body.email);
     console.log("password: ", req.body.password);
@@ -155,6 +172,7 @@ app.post('/register', (req, res) => {
     return res.redirect('/login');
   }
   res.redirect('/urls')
+  // Test console logs
   console.log("request body: ", req.body);
   console.log("email: ", req.body.email);
   console.log("password: ", req.body.password);

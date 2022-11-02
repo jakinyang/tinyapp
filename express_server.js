@@ -108,22 +108,31 @@ app.post('/urls/:id', (req, res) => {
 
 // Handling post request for /login
 app.post('/login', (req, res) => {
-  const username = req.body.username;
   const password = req.body.password;
   const email = req.body.email;
-  let cookieObj;
 
+  // If they are not logged in
+  // They don't have one of the loginTokens or they don't have both loginTokens
   if (!req.cookies.loginTokenID || !req.cookies.loginTokenPass) {
     for (let id in userDatabase) {
-      if(id.email !== email || id.password !== password) {
-        res.cookie('badLogin', true);
-        res.redirect('/login')
-      }
+      if (id.email === email && id.password === password) {
+        res.cookie('loginTokenID', id);
+        res.cookie('loginTokenPass', id.password);
+        if (req.cookies.badLogin) {
+          res.clearCookie('badLogin');
+        }
+        return res.redirect('/urls');
     }
-    // Test console logs
-    return res.redirect('/urls');
+    if (!req.cookies.badLogin) {
+      res.cookie('badLogin', true);
+    }
+    res.redirect('/login')
   }
+
+  // If they are logged in
+  // They have both loginTokens
   res.redirect('/urls')
+  // Test console logs
 
   res.cookie('username', username);
   res.redirect('/urls');

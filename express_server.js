@@ -145,6 +145,14 @@ app.post('/register', (req, res) => {
       email,
       password,
     };
+    console.log("request body: ", req.body);
+    console.log("email: ", req.body.email);
+    console.log("password: ", req.body.password);
+    console.log("Updated userDatabase: ", userDatabase);
+    console.log("Request Method: ", req.method);
+    console.log("Request URL: ", req.url);
+    console.log('<<--------------------->>');
+    return res.redirect('/login');
   }
   res.redirect('/urls')
   console.log("request body: ", req.body);

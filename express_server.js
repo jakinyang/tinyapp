@@ -248,7 +248,7 @@ app.get('/register', (req, res) => {
 // Route to /login page
 app.get('/login', (req, res) => {
   const templateVars = {
-
+    "badLogin": req.cookies.badLogin,
   };
   res.render('urls_login', templateVars);
   // Test Logs

@@ -123,7 +123,7 @@ app.get('/', (req, res) => {
   res.redirect("/urls");
 });
 
-// Route for get to url list page
+// Route for get to urls json page
 app.get('/urls.json', (req, res) => {
   const templateVars = {
     username: req.cookies["username"],
@@ -154,6 +154,19 @@ app.get('/urls/new', (req, res) => {
     username: req.cookies["username"],
   };
   res.render('urls_new', templateVars);
+  // Test Logs
+  console.log("Request Method: ", req.method);
+  console.log("Request URL: ", req.url);
+  console.log("Client request for /urls/new");
+  console.log('<<--------------------->>');
+});
+
+// Route to /register page
+app.get('/register', (req, res) => {
+  const templateVars = {
+
+  };
+  res.render('urls_login', templateVars);
   // Test Logs
   console.log("Request Method: ", req.method);
   console.log("Request URL: ", req.url);

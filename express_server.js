@@ -1,7 +1,5 @@
 // Require express for server
 const express = require('express');
-// Require request-promise for learning/experimenting
-const reqProm = require('request-promise');
 // Requiring randomStringGen
 const { randomStringGen } = require('./randomGenerator');
 // Requiring cookieParser
@@ -16,11 +14,6 @@ const urlDatabase = {
   "b2xVn2": "http://lighthouselabs.ca",
   "9sm5xK": "http://www.google.com",
 };
-
-// For learning/experimenting
-let hipsumText;
-const hipsumFetch = () => reqProm("http://hipsum.co/api/?type=hipster-centric&sentences=3");
-
 
 // Main code
 
@@ -143,6 +136,7 @@ app.get('/urls/new', (req, res) => {
 // Route to page for given id's url
 app.get('/urls/:id', (req, res) => {
   const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id], username: req.cookies["username"], };
+  
   res.render('urls_show', templateVars);
   console.log("longURL: ", templateVars.longURL);
   console.log("Request Method: ", req.method);
@@ -160,32 +154,7 @@ app.get('/u/:id', (req, res) => {
   console.log("Client request for /urls/id");
 });
 
-// Learning/experimenting route
-app.get('/helloWorld', (req, res) => {
-  res.send("<html><body><h1>Hello World!</h1></body></html>");
-  console.log("Request Method: ", req.method);
-  console.log("Request URL: ", req.url);
-  console.log("Client request for /helloWorld");
-});
-
-// Learning/experimenting route
-app.get('/hipsum', (req, res) => {
-  hipsumFetch()
-    .then(data => {
-      console.log("Data fetch for hipsum successful: data");
-      hipsumText = JSON.parse(data);
-      res.render('hipsum', { hipsumText: hipsumText });
-      console.log("Request Method: ", req.method);
-      console.log("Request URL: ", req.url);
-      console.log("Client request for /hipsum");
-    })
-    .catch(error => {
-      console.log(error);
-      res.redirect('pages/404');
-    });
-  
-});
-
+// Setting up listener
 app.listen(PORT, () => {
   console.log(`Express server up: listening on port ${PORT}`);
 });

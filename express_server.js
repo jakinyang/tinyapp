@@ -111,6 +111,16 @@ app.post('/logout', (req, res) => {
   console.log('<<--------------------->>');
 });
 
+// Handling post request for /regsiter
+app.post('/register', (req, res) => {
+  res.redirect('/register');
+  console.log(req.body);
+  console.log("request body: ", req.body);
+  console.log("Request Method: ", req.method);
+  console.log("Request URL: ", req.url);
+  console.log('<<--------------------->>');
+});
+
 // Route for get for root
 app.get('/', (req, res) => {
   const templateVars = {

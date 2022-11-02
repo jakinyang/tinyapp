@@ -2,6 +2,8 @@
 const express = require('express');
 // Requiring randomStringGen
 const { randomStringGen } = require('./randomGenerator');
+// Require morgan
+const morgan = require('morgan');
 // Requiring cookieParser
 const cookieParser = require('cookie-parser');
 // Assign the server instance to a const
@@ -15,11 +17,13 @@ const PORT = 8080;
 
 // URL Database - Stand in for a backend database
 const urlDatabase = {
-  "b2xVn2": "http://lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com",
+  "generic": {
+    "b2xVn2": "http://lighthouselabs.ca",
+    "9sm5xK": "http://www.google.com",
+  },
 };
 
-// User datbase
+// User database
 const userDatabase = {
   
 };
@@ -82,6 +86,7 @@ app.post('/urls/:id/delete', (req, res) => {
 // Handling post update request from urls/:id/
 app.post('/urls/:id', (req, res) => {
   const templateVars = { 
+    loginToken: req.headers.cookies.userID,
     id: req.params.id, 
     longURL: req.body.longURL, 
     username: req.cookies["username"], 
@@ -89,7 +94,10 @@ app.post('/urls/:id', (req, res) => {
   console.log('Current urlDatabase: ', urlDatabase);
   console.log("id: ", req.params.id);
   console.log("longURL: ", req.body.longURL);
-  urlDatabase[req.params.id] = req.body.longURL;
+  // Conditional: if browser has login cookie && cookie marker matches a 
+
+  // If not
+  urlDatabase.generic[req.params.id] = req.body.longURL;
   console.log('Updated urlDatabase: ', urlDatabase);
   console.log("Request Method: ", req.method);
   console.log("Request URL: ", req.url);
@@ -124,16 +132,21 @@ app.post('/logout', (req, res) => {
 });
 
 // Handling post request for /regsiter
+// POST request 
 app.post('/register', (req, res) => {
   const userId = randomStringGen();
   const password = req.body.password;
   const email = req.body.email;
-  userDatabase[userId] = {
-    email,
-    password,
-  } 
-  res.redirect('/register');
+  // If the person is not already logged in
+  // -->> Does note have loginToken cookie
   console.log("Current userDatabase: ", userDatabase);
+  if (!req.cookies.loginTokenID || !req.cookies.loginTokenPass) {
+    userDatabase[userId] = {
+      email,
+      password,
+    };
+  }
+  res.redirect('/urls')
   console.log("request body: ", req.body);
   console.log("email: ", req.body.email);
   console.log("password: ", req.body.password);
@@ -170,7 +183,7 @@ app.get('/urls.json', (req, res) => {
 // Route for url page with table of urls IDs and long urls
 app.get('/urls', (req, res) => {
   const templateVars = {
-    urls: urlDatabase, 
+    urls: urlDatabase.generic, 
     username: req.cookies["username"],
   };
   res.render('urls_index', templateVars);
@@ -198,11 +211,24 @@ app.get('/register', (req, res) => {
   const templateVars = {
 
   };
+  res.render('urls_register', templateVars);
+  // Test Logs
+  console.log("Request Method: ", req.method);
+  console.log("Request URL: ", req.url);
+  console.log("Client request for /register");
+  console.log('<<--------------------->>');
+});
+
+// Route to /login page
+app.get('/login', (req, res) => {
+  const templateVars = {
+
+  };
   res.render('urls_login', templateVars);
   // Test Logs
   console.log("Request Method: ", req.method);
   console.log("Request URL: ", req.url);
-  console.log("Client request for /urls/new");
+  console.log("Client request for /login");
   console.log('<<--------------------->>');
 });
 

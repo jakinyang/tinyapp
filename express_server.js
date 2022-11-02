@@ -114,7 +114,6 @@ app.post('/logout', (req, res) => {
 // Handling post request for /regsiter
 app.post('/register', (req, res) => {
   res.redirect('/register');
-  console.log(req.body);
   console.log("request body: ", req.body);
   console.log("Request Method: ", req.method);
   console.log("Request URL: ", req.url);

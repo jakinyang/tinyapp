@@ -9,10 +9,19 @@ const app = express();
 
 const PORT = 8080;
 
+// 
+// Mock Databases
+// 
+
 // URL Database - Stand in for a backend database
 const urlDatabase = {
   "b2xVn2": "http://lighthouselabs.ca",
   "9sm5xK": "http://www.google.com",
+};
+
+// User datbase
+const userDatabase = {
+  
 };
 
 // 
@@ -113,8 +122,19 @@ app.post('/logout', (req, res) => {
 
 // Handling post request for /regsiter
 app.post('/register', (req, res) => {
+  const userId = randomStringGen();
+  const password = req.body.password;
+  const email = req.body.email;
+  userDatabase[userId] = {
+    email,
+    password,
+  } 
   res.redirect('/register');
+  console.log("Current userDatabase: ", userDatabase);
   console.log("request body: ", req.body);
+  console.log("email: ", req.body.email);
+  console.log("password: ", req.body.password);
+  console.log("Updated userDatabase: ", userDatabase);
   console.log("Request Method: ", req.method);
   console.log("Request URL: ", req.url);
   console.log('<<--------------------->>');

@@ -4,13 +4,14 @@ const express = require('express');
 const reqProm = require('request-promise');
 // Requiring randomStringGen
 const { randomStringGen } = require('./randomGenerator');
+// Requiring cookieParser
+const cookieParser = require('cookie-parser');
 // Assign the server instance to a const
 const app = express();
 
 const PORT = 8080;
 
 // URL Database - Stand in for a backend database
-// Can now take
 const urlDatabase = {
   "b2xVn2": "http://lighthouselabs.ca",
   "9sm5xK": "http://www.google.com",
@@ -29,8 +30,13 @@ app.set('view engine', 'ejs');
 // Middle ware to take in form POST and encode as url
 app.use(express.urlencoded({ extended: true}));
 
+// Middle ware to handle cookies
+app.use(cookieParser());
 // Handling post request from urls/new
 app.post('/urls', (req, res) => {
+  const templateVars = {
+    username: req.cookies["username"],
+  };
   console.log("Request Method: ", req.method);
   console.log("Request URL: ", req.url);
   console.log("Client post request from /url/new");
@@ -40,11 +46,11 @@ app.post('/urls', (req, res) => {
   urlDatabase[newkey] = req.body.longURL;
   console.log(urlDatabase);
   res.redirect(`/urls/${newkey}`);
-})
+});
 
 // Handling post delete request from urls/:id/delete
 app.post('/urls/:id/delete', (req, res) => {
-  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id], };
+  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id], username: req.cookies["username"], };
   console.log(urlDatabase);
   delete urlDatabase[templateVars.id];
   console.log(urlDatabase);
@@ -57,7 +63,7 @@ app.post('/urls/:id/delete', (req, res) => {
 
 // Handling post update request from urls/:id/
 app.post('/urls/:id', (req, res) => {
-  const templateVars = { id: req.params.id, longURL: req.body.longURL, };
+  const templateVars = { id: req.params.id, longURL: req.body.longURL, username: req.cookies["username"], };
   console.log(urlDatabase);
   urlDatabase[req.params.id] = req.body.longURL;
   console.log(urlDatabase);
@@ -69,9 +75,35 @@ app.post('/urls/:id', (req, res) => {
   console.log(`Client request for post update /urls/${templateVars.id} to ${req.body.longURL}`);
 });
 
+// Handling post request for /login
+app.post('/login', (req, res) => {
+  const username = req.body.username;
+  res.cookie('username', username);
+  res.redirect('/urls');
+  console.log("cookies:", req.cookies);
+  console.log("username: ", req.body.username);
+  console.log("request body: ", req.body);
+  console.log("Request Method: ", req.method);
+  console.log("Request URL: ", req.url);
+});
+
+// Handling post request for /logout
+app.post('/logout', (req, res) => {
+  res.clearCookie('username');
+  res.redirect('/urls');
+  console.log("cookies:", req.cookies);
+  console.log("username: ", req.body.username);
+  console.log("request body: ", req.body);
+  console.log("Request Method: ", req.method);
+  console.log("Request URL: ", req.url);
+});
+
 // Route for get for root
 app.get('/', (req, res) => {
-  res.send("Hello World!");
+  const templateVars = {
+    username: req.cookies["username"],
+  };
+  res.redirect("/urls");
   console.log("Request Method: ", req.method);
   console.log("Request URL: ", req.url);
   console.log("Client request for root");
@@ -79,6 +111,9 @@ app.get('/', (req, res) => {
 
 // Route for get to url list page
 app.get('/urls.json', (req, res) => {
+  const templateVars = {
+    username: req.cookies["username"],
+  };
   res.send(urlDatabase);
   console.log("Request Method: ", req.method);
   console.log("Request URL: ", req.url);
@@ -87,7 +122,7 @@ app.get('/urls.json', (req, res) => {
 
 // Route for url page with table of urls IDs and long urls
 app.get('/urls', (req, res) => {
-  const templateVars = {urls: urlDatabase};
+  const templateVars = {urls: urlDatabase, username: req.cookies["username"],};
   res.render('urls_index', templateVars);
   console.log("Request Method: ", req.method);
   console.log("Request URL: ", req.url);
@@ -96,7 +131,10 @@ app.get('/urls', (req, res) => {
 
 // Route to page with form to post new urls
 app.get('/urls/new', (req, res) => {
-  res.render('urls_new');
+  const templateVars = {
+    username: req.cookies["username"],
+  };
+  res.render('urls_new', templateVars);
   console.log("Request Method: ", req.method);
   console.log("Request URL: ", req.url);
   console.log("Client request for /urls/new");
@@ -104,8 +142,8 @@ app.get('/urls/new', (req, res) => {
 
 // Route to page for given id's url
 app.get('/urls/:id', (req, res) => {
-  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id], };
-  res.render('urls_show', (templateVars));
+  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id], username: req.cookies["username"], };
+  res.render('urls_show', templateVars);
   console.log("longURL: ", templateVars.longURL);
   console.log("Request Method: ", req.method);
   console.log("Request URL: ", req.url);
@@ -114,7 +152,7 @@ app.get('/urls/:id', (req, res) => {
 
 // Route for short url redirect
 app.get('/u/:id', (req, res) => {
-  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id], };
+  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id], username: req.cookies["username"], };
   res.redirect(templateVars.longURL);
   console.log("longURL: ", templateVars.longURL);
   console.log("Request Method: ", req.method);

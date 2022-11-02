@@ -7,12 +7,12 @@ const randomAlphaNumGen = () => {
   let upperChar = String.fromCharCode(upperCharCode);
   // Generate number
   let randomNum = Math.floor(Math.random() * 10);
-  return [lowerChar, upperChar, randomNum]
-}
+  return [lowerChar, upperChar, randomNum];
+};
 
 const randomIndexGen = () => {
   return Math.floor(Math.random() * 18);
-}
+};
 
 const randomStringGen = () => {
   let alphaNumArr = [];
@@ -20,10 +20,10 @@ const randomStringGen = () => {
   for (let i = 0; i < 6; i++) {
     alphaNumArr = alphaNumArr.concat(randomAlphaNumGen());
   }
-  for(let j = 0; j < 6; j++) {
+  for (let j = 0; j < 6; j++) {
     outputArr.push(alphaNumArr[randomIndexGen()]);
   }
   return outputArr.join('');
-}
+};
 
-module.exports = { randomStringGen }
+module.exports = { randomStringGen };

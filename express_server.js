@@ -34,6 +34,9 @@ app.set('view engine', 'ejs');
 // Middleware to take in form POST and encode as url
 app.use(express.urlencoded({ extended: true}));
 
+// Morgan
+app.use(morgan('dev'));
+
 // Middleware to handle cookies
 app.use(cookieParser());
 

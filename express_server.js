@@ -83,7 +83,7 @@ app.post('/urls', (req, res) => {
     // If the browser/client has loginToken cookies
     //  but they don't match any in the system
     //  then redirect with generic
-    cookieWiper(cookies);
+    cookieWiper(cookies, res);
     urlDatabase['generic'][newkey] = req.body.longURL;
     return res.reditect('/urls');
   }
@@ -109,7 +109,7 @@ app.post('/urls/:id/delete', (req, res) => {
       }
     }
     res.status(401);
-    cookieWiper(cookies);
+    cookieWiper(cookies, res);
   }
   /* 
   if(urlDatabase['generic'][id]) {
@@ -152,7 +152,7 @@ app.post('/urls/:id', (req, res) => {
       return res.redirect(`/urls/${id}`);
     }
     res.status(401);
-    cookieWiper(cookies);
+    cookieWiper(cookies, res);
     return res.redirect(`/urls/${id}`);
   }
 });
@@ -166,7 +166,7 @@ app.post('/register', (req, res) => {
   const cookies = req.cookies;
   // If the person is not already logged in
   // If they did not enter a password or email in form
-  if (!password || !email) {
+  if (!req.body.password || !email) {
     res.status(400);
     res.cookie('badRegister', true);
     return res.redirect('/register');
@@ -209,7 +209,7 @@ app.post('/login', (req, res) => {
     // Cycle through database
     for (let id in userDatabase) {
       // Check for matching email and password pairs at given id
-      if (userDatabase[id]['email'] === email && bycrypt.compareSync(userDatabase[id]['password'], password)) {
+      if (userDatabase[id]['email'] === email && bcrypt.compareSync(password, userDatabase[id]['password'])) {
         res.cookie('loginTokenID', id);
         res.cookie('loginTokenEmail', email);
         res.cookie('loginTokenPass', userDatabase[id]['password']);
@@ -240,7 +240,7 @@ app.post('/login', (req, res) => {
 // Handling post request for /logout
 app.post('/logout', (req, res) => {
   const cookies = req.cookies;
-  cookieWiper(cookies);
+  cookieWiper(cookies, res);
   /* res.clearCookie('loginTokenID');
   res.clearCookie('loginTokenEmail');
   res.clearCookie('loginTokenPass'); */
@@ -297,7 +297,7 @@ app.get('/urls', (req, res) => {
       res.render('urls_index', templateVars);
     }
     res.status(401);
-    cookieWiper(cookies);
+    cookieWiper(cookies, res);
     return res.render('urls_index', templateVars);
   }
 });

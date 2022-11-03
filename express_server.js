@@ -3,7 +3,7 @@ const express = require('express');
 // Requiring randomStringGen
 const { randomStringGen } = require('./randomGenerator');
 // Requiring helperModules
-const { databaseIterator, tokenAuthenticator } = require('./helperModules');
+const { databaseIterator, tokenAuthenticator, tripleTokenCheck } = require('./helperModules');
 // Require morgan
 const morgan = require('morgan');
 // Requiring cookieParser
@@ -290,26 +290,22 @@ app.get('/urls.json', (req, res) => {
 // Route for url page with table of urls IDs and long urls
 app.get('/urls', (req, res) => {
   // loginToken cookie values
-  const loginTokenID = req.cookies.loginTokenID;
-  const loginTokenEmail = req.cookies.loginTokenEmail;
-  const loginTokenPass = req.cookies.loginTokenPass;
-  const urlAccessDenied = req.cookies.urlAccessDenied;
+  const cookies = req.cookies;
 
   // Template vars contains urlDatabase subsets:
   // Generic and object matched with loginTokenID 
   const templateVars = {
     showLogin: false,
     urls: urlDatabase['generic'],
-    userEmail: loginTokenEmail,
-    urlAccessDenied: urlAccessDenied,
+    cookies: cookies,
   };
 
-  if (!loginTokenID || !loginTokenPass || !loginTokenEmail) {
+  if (!tripleTokenCheck(cookies)) {
     templateVars.showLogin = true;
     return res.render('urls_index', templateVars);
   }
 
-  if (loginTokenEmail === userDatabase[loginTokenID]['email'] && loginTokenPass === userDatabase[loginTokenID]['password']) {
+  if (tokenAuthenticator(cookies, userDatabase)) {
     templateVars.urls = urlDatabase[loginTokenID];
   }
 
@@ -376,19 +372,13 @@ app.get('/login', (req, res) => {
   // Generic and object matched with loginTokenID 
   const templateVars = {
     showLogin: false,
-    userEmail: loginTokenEmail,
     cookies: cookies,
   };
   if (!cookies.loginTokenID || !cookies.loginTokenPass) {
-    templateVars.userEmail = null;
+    cookies.loginTokenEmail = null;
     return res.render('urls_login', templateVars);
   }
   res.redirect('/urls');
-  // Test Logs
-  console.log("Request Method: ", req.method);
-  console.log("Request URL: ", req.url);
-  console.log("Client request for /login");
-  console.log('<<--------------------->>');
 });
 
 // Route to page for given id's url
@@ -407,7 +397,7 @@ app.get('/urls/:id', (req, res) => {
   };
   
   
-  if (!cookies.loginTokenID || !cookies.loginTokenPass) {
+  if (!tripleTokenCheck(cookies)) {
     const idEvaluation = databaseIterator(urlDatabase, req.params.id);
     if (idEvaluation !== urlDatabase['generic'][req.params.id] || idEvaluation === false) {
       res.cookie('urlAccessDenied', true);

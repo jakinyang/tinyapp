@@ -92,9 +92,11 @@ app.post('/urls/:id/delete', (req, res) => {
       return res.redirect('/urls');
     }
   }
+  /* 
   if(urlDatabase['generic'][id]) {
     delete urlDatabase['generic'][id]
-  }
+  } 
+  */
   res.redirect('/urls');
 });
 
@@ -355,6 +357,10 @@ app.get('/urls/:id', (req, res) => {
 // Route for short url redirect
 app.get('/u/:id', (req, res) => {
   let targetURL = databaseIterator(urlDatabase, req.params.id);
+  if(!targetURL) {
+    res.status(404);
+    res.send('Cannot find url id');
+  }
   
   res.redirect(targetURL);
 });

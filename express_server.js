@@ -221,15 +221,15 @@ app.get('/', (req, res) => {
 
 // Route for get to urls json page
 app.get('/urls.json', (req, res) => {
-  // Template vars contains urlDatabase subsets:
-  // Generic and object matched with loginTokenID 
-  const templateVars = {
-    generic: urlDatabase['generic'],
-    iDMatch: urlDatabase[loginTokenID],
-  };
   // loginToken cookie values
   const loginTokenID = req.cookies.loginTokenID;
   const loginTokenPass = req.cookies.loginTokenPass;
+  // Template vars contains urlDatabase subsets:
+  // Generic and object matched with loginTokenID 
+  const templateVars = {
+    generic: JSON.stringinfy(urlDatabase['generic']),
+    iDMatch: JSON.stringify(urlDatabase[loginTokenID]),
+  };
   if (!loginTokenID || !loginTokenPass) {
     console.log("No loginToken detected");
     console.log("Displaying urlDatabase generic");
@@ -237,14 +237,14 @@ app.get('/urls.json', (req, res) => {
     console.log("Request URL: ", req.url);
     console.log("Client request for /urls.json");
     console.log('<<--------------------->>');
-    return res.send(urlDatabase['generic']);
+    return res.send(templateVars.generic);
   }
   
   console.log("Request Method: ", req.method);
   console.log("Request URL: ", req.url);
   console.log("Client request for /urls.json");
   console.log('<<--------------------->>');
-  return res.send(urlDatabase[loginTokenID]);
+  return res.send(templateVars.iDMatch);
 });
 
 // Route for url page with table of urls IDs and long urls

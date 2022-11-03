@@ -174,26 +174,35 @@ app.post('/login', (req, res) => {
   const email = req.body.email;
   const cookies = req.cookies;
   // If they are not logged in
-  // They don't have one of the loginTokens or they don't have both loginTokens
+  // They don't have incomplete or no login tokens
   if (!tripleTokenCheck(cookies)) {
+    // Cycle through database
     for (let id in userDatabase) {
+      // Check for matching email and password pairs at given id
       if (userDatabase[id]['email'] === email && userDatabase[id]['password'] === password) {
         res.cookie('loginTokenID', id);
         res.cookie('loginTokenEmail', email);
         res.cookie('loginTokenPass', userDatabase[id]['password']);
+        // If successful, clear any bad marker cookies
         if (req.cookies.badLogin) {
           res.clearCookie('badLogin');
         }
+        // Redirect to /urls with login cookies
         return res.redirect('/urls');
       }
     }
+
+    // If login matching fails
+    // And they don't already have the bad login token
     if (!cookies.badLogin) {
       res.cookie('badLogin', true);
     }
+    // Redirect to login and set response status to 403
+    res.status(403);
     return res.redirect('/login');
   }
   // If they are logged in
-  // They have both loginTokens
+  // They have all loginTokens
   return res.redirect('/urls')
 });
 

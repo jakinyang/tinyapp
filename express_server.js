@@ -339,10 +339,15 @@ app.get('/login', (req, res) => {
   // Generic and object matched with loginTokenID 
   const templateVars = {
     urls: urlDatabase[loginTokenID],
-    userEmail: loginTokenEmail ? loginTokenEmail : null,
+    userEmail: loginTokenEmail,
+    loginTokenID: loginTokenID,
+    loginTokenPass: loginTokenPass,
     badLogin: req.cookies.badLogin ? req.cookies.badLogin : null,
   };
   if (!loginTokenID || !loginTokenPass) {
+    templateVars.loginTokenID = null;
+    templateVars.loginTokenPass = null;
+    templateVars.userEmail = null;
     return res.render('urls_login', templateVars);
   }
   res.redirect('/urls');

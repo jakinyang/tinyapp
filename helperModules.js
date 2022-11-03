@@ -39,7 +39,7 @@ const tripleTokenCheck = (tokenObject) => {
  * Takes an object and checks that it has values for loginToken ID, Password, and Email. Returns boolean
  * */
 
-const cookieWiper = (cookiesObject) => {
+const cookieWiper = (cookiesObject, res) => {
   for (cookie in cookiesObject) {
     res.clearCookie(cookie);
   }

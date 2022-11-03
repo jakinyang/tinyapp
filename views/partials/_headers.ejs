@@ -18,10 +18,10 @@
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
       </div>
     </div>
-    <% if(username) { %>
+    <% if (userEmail) { %>
       <!-- Form A -->
     <div class="form-group row">
-      <div><%= username %></div>
+      <div><%= userEmail %></div>
       <form class="form-inline" action="/logout" method="POST">
         <button type="submit" class="btn btn-light"> Log Out</button>
       </form>

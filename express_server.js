@@ -211,7 +211,7 @@ app.post('/logout', (req, res) => {
   res.clearCookie('loginTokenID');
   res.clearCookie('loginTokenEmail');
   res.clearCookie('loginTokenPass');
-  res.redirect('/urls');
+  res.redirect('/login');
 });
 
 // 

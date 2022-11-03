@@ -13,7 +13,7 @@ const databaseIterator = (database, targetId) => {
 }
 
 /**
- * Takes an object with ID, Email, and Password tokens; iterates over database to make sure both email and password in object of that ID match. Returns boolean.
+ * Takes an object with ID, Email, and Password tokens; conditionally checks database to make sure both email and password in object of that ID match. Returns boolean.
  * */
 const tokenAuthenticator = (tokenObject, database) => {
   const id = tokenObject.loginTokenID;
@@ -24,4 +24,14 @@ const tokenAuthenticator = (tokenObject, database) => {
   }
   return false;
 }
-module.exports = { databaseIterator, tokenAuthenticator, }
+
+/**
+ * Takes an object and checks that it has values for loginToken ID, Password, and Email. Returns boolean
+ * */
+const tripleTokenCheck = (tokenObject) => {
+  if (!tokenObject.loginTokenID || !tokenObject.loginTokenPass || !tokenObject.loginTokenEmail) {
+    return false;
+  }
+  return true;
+}
+module.exports = { databaseIterator, tokenAuthenticator, tripleTokenCheck, }

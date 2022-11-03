@@ -1,5 +1,7 @@
 // Require express for server
 const express = require('express');
+// Require bcryptjs
+const bcrypt = require('bcryptjs');
 // Requiring randomStringGen
 const { randomStringGen } = require('./randomGenerator');
 // Requiring helperModules
@@ -159,7 +161,7 @@ app.post('/urls/:id', (req, res) => {
 // POST request 
 app.post('/register', (req, res) => {
   const userId = randomStringGen();
-  const password = req.body.password;
+  const password = bcrypt.hashSync(req.body.password);
   const email = req.body.email;
   const cookies = req.cookies;
   // If the person is not already logged in
@@ -207,7 +209,7 @@ app.post('/login', (req, res) => {
     // Cycle through database
     for (let id in userDatabase) {
       // Check for matching email and password pairs at given id
-      if (userDatabase[id]['email'] === email && userDatabase[id]['password'] === password) {
+      if (userDatabase[id]['email'] === email && bycrypt.compareSync(userDatabase[id]['password'], password)) {
         res.cookie('loginTokenID', id);
         res.cookie('loginTokenEmail', email);
         res.cookie('loginTokenPass', userDatabase[id]['password']);

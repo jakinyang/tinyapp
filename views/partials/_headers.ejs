@@ -21,10 +21,16 @@
     <% if (cookies.loginTokenEmail) { %>
       <!-- Form A -->
     <div class="form-group row">
-      <div><%= cookies.loginTokenEmail %></div>
-      <form class="form-inline" action="/logout" method="POST">
-        <button type="submit" class="btn btn-light"> Log Out</button>
-      </form>
+      <div class="col">
+        <h6>Signed in as: <%= cookies.loginTokenEmail %></h6>
+      </div>
+      <div class="col">
+        <form class="form-inline" action="/logout" method="POST">
+          <button type="submit" class="btn btn-light">
+            Log Out
+          </button>
+        </form>
+      </div>
     </div>
     <% } else { %>
       <!-- Form B -->

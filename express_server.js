@@ -57,24 +57,28 @@ app.use(cookieParser());
 // Handling post request from urls/new
 app.post('/urls', (req, res) => {
   // loginToken cookie values
-  const loginTokenID = req.cookies.loginTokenID;
-  const loginTokenPass = req.cookies.loginTokenPass;
+  const cookies = req.cookies;
   // New random short urlID
   const newkey = randomStringGen();
 
-  // Checking for login tokens
-  if (!loginTokenID || !loginTokenPass) {
+  // Checking for login tokens -->> if not logged in
+  if (!tripleTokenCheck(cookies)) {
     urlDatabase['generic'][newkey] = req.body.longURL;
     return res.redirect(`/urls/${newkey}`);
   }
-  // If logged in
-  if (!urlDatabase[loginTokenID]) {
-    // If first time making new tinyURL, initialize object for ID
-    urlDatabase[loginTokenID] = {};
-  };
-  // Post long url and ID in object at loginTokenID
-  urlDatabase[loginTokenID][newkey] = req.body.longURL;
-  return res.redirect(`/urls/${newkey}`);
+  // Checking that login tokens are all intermatching
+  if (tokenAuthenticator(cookies, userDatabase)) {
+    if (!urlDatabase[loginTokenID]) {
+      // If first time making new tinyURL, initialize object for ID
+      urlDatabase[loginTokenID] = {};
+    };
+    // Post long url and ID in object at loginTokenID
+    urlDatabase[loginTokenID][newkey] = req.body.longURL;
+    return res.redirect(`/urls/${newkey}`);
+  }
+  // If logins tokens don't match
+  urlDatabase['generic'][newkey] = req.body.longURL;
+  return res.reditect('/urls')
 });
 
 // Handling post delete request from urls/:id/delete
@@ -108,6 +112,10 @@ app.post('/urls/:id', (req, res) => {
     longURL: null, 
   };
   
+  if(!longURL) {
+    return res.redirect(`/urls/${id}`);
+  }
+
   if (!tripleTokenCheck(cookies)) {
     templateVars.longURL = urlDatabase['generic'][id];
     urlDatabase['generic'][id] = longURL;
@@ -117,6 +125,47 @@ app.post('/urls/:id', (req, res) => {
   templateVars.longURL = urlDatabase[cookies.loginTokenID][id];
   urlDatabase[cookies.loginTokenID][id] = longURL;
   return res.redirect(`/urls/${req.params.id}`);
+});
+
+// Handling post request for /regsiter
+// POST request 
+app.post('/register', (req, res) => {
+  const userId = randomStringGen();
+  const password = req.body.password;
+  const email = req.body.email;
+  const cookies = req.cookies;
+  // If the person is not already logged in
+  // If they did not enter a password or email in form
+  if (!password || !email) {
+    res.status(400);
+    res.cookie('badRegister', true);
+    return res.redirect('/register');
+  }
+  // If the email they entered already exists in userDatabase
+  for (let id in userDatabase) {
+    if (userDatabase[id]['email'] && userDatabase[id]['email'] === email) {
+      res.status(400);
+      res.cookie('duplicateRegister', true);
+      return res.redirect('/register');
+    }
+  }
+
+  // If they are not already logged in
+  // And the request body email and password are valid
+  if (!tripleTokenCheck(cookies)) {
+    res.clearCookie('badRegister');
+    res.clearCookie('duplicateRegister');
+    userDatabase[userId] = {
+      userId,
+      email,
+      password,
+    };
+    return res.redirect('/login');
+  }
+
+  // Otherwise, they're already logged in
+  // Auto redirect to /urls
+  res.redirect('/urls')
 });
 
 // Handling post request for /login
@@ -154,37 +203,6 @@ app.post('/logout', (req, res) => {
   res.clearCookie('loginTokenEmail');
   res.clearCookie('loginTokenPass');
   res.redirect('/urls');
-});
-
-// Handling post request for /regsiter
-// POST request 
-app.post('/register', (req, res) => {
-  const userId = randomStringGen();
-  const password = req.body.password;
-  const email = req.body.email;
-  const cookies = req.cookies;
-  // If the person is not already logged in
-  // -->> Does note have loginToken cookie
-  if (!password || !email) {
-    res.cookie('badRegister', true);
-    return res.redirect('/register');
-  }
-  for (let id in userDatabase) {
-    if (userDatabase[id]['email'] && userDatabase[id]['email'] === email) {
-      res.cookie('duplicateRegister', true);
-      return res.redirect('/register');
-    }
-  }
-  if (!tripleTokenCheck(cookies)) {
-    res.clearCookie('badRegister');
-    res.clearCookie('duplicateRegister');
-    userDatabase[userId] = {
-      email,
-      password,
-    };
-    return res.redirect('/login');
-  }
-  res.redirect('/urls')
 });
 
 // 

@@ -165,6 +165,7 @@ app.post('/login', (req, res) => {
         }
         console.log("Redirecting to /urls");
         return res.redirect('/urls');
+      }
     }
     console.log("No user input matches in userDatabase");
     if (!req.cookies.badLogin) {
@@ -174,7 +175,6 @@ app.post('/login', (req, res) => {
     console.log("Redirecting to /login");
     console.log('<<--------------------->>');
     return res.redirect('/login');
-    }
   }
   // If they are logged in
   // They have both loginTokens
@@ -189,7 +189,9 @@ app.post('/login', (req, res) => {
 
 // Handling post request for /logout
 app.post('/logout', (req, res) => {
-  res.clearCookie('username');
+  res.clearCookie('loginTokenID');
+  res.clearCookie('loginTokenEmail');
+  res.clearCookie('loginTokenPass');
   res.redirect('/urls');
   console.log("cookies:", req.cookies);
   console.log("username: ", req.body.username);
@@ -287,13 +289,19 @@ app.get('/urls', (req, res) => {
   // Generic and object matched with loginTokenID 
   const templateVars = {
     showLogin: false,
-    urls: urlDatabase[loginTokenID],
+    urls: urlDatabase['generic'],
     userEmail: loginTokenEmail,
   };
-  if (!loginTokenID || !loginTokenPass) {
+
+  if (!loginTokenID || !loginTokenPass || !loginTokenEmail) {
     templateVars.showLogin = true;
-    templateVars.urls = urlDatabase['generic'];
+    return res.render('urls_index', templateVars);
   }
+
+  if (loginTokenEmail === userDatabase[loginTokenID]['email'] && loginTokenPass === userDatabase[loginTokenID]['password']) {
+    templateVars.urls = urlDatabase[loginTokenID];
+  }
+
   res.render('urls_index', templateVars);
   console.log("Request Method: ", req.method);
   console.log("Request URL: ", req.url);
@@ -395,9 +403,10 @@ app.get('/urls/:id', (req, res) => {
   if (!loginTokenID || !loginTokenPass) {
     templateVars.showLogin = true;
     templateVars.longURL = urlDatabase['generic'][req.params.id];
-    return res.render('urls_show', templateVars);
   }
-  urlDatabase[loginTokenID][req.params.id]
+  if (loginTokenEmail === userDatabase[loginTokenID]['email'] && loginTokenPass === userDatabase[loginTokenID]['password']) {
+    templateVars.longURL = urlDatabase[loginTokenID][req.params.id];
+  }
   // Test Logs
   console.log("longURL: ", templateVars.longURL);
   console.log("Request Method: ", req.method);

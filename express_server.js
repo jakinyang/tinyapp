@@ -68,12 +68,12 @@ app.post('/urls', (req, res) => {
   }
   // Checking that login tokens are all intermatching
   if (tokenAuthenticator(cookies, userDatabase)) {
-    if (!urlDatabase[loginTokenID]) {
+    if (!urlDatabase[cookies.loginTokenID]) {
       // If first time making new tinyURL, initialize object for ID
-      urlDatabase[loginTokenID] = {};
+      urlDatabase[cookies.loginTokenID] = {};
     };
     // Post long url and ID in object at loginTokenID
-    urlDatabase[loginTokenID][newkey] = req.body.longURL;
+    urlDatabase[cookies.loginTokenID][newkey] = req.body.longURL;
     return res.redirect(`/urls/${newkey}`);
   }
   // If logins tokens don't match

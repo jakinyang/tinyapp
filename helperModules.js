@@ -44,4 +44,4 @@ const cookieWiper = (cookiesObject) => {
     res.clearCookie(cookie);
   }
 }
-module.exports = { databaseIterator, tokenAuthenticator, tripleTokenCheck, }
+module.exports = { databaseIterator, tokenAuthenticator, tripleTokenCheck, cookieWiper }

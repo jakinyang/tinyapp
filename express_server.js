@@ -203,6 +203,7 @@ app.post('/register', (req, res) => {
   const userId = randomStringGen();
   const password = req.body.password;
   const email = req.body.email;
+  const cookies = req.cookies;
   // If the person is not already logged in
   // -->> Does note have loginToken cookie
   if (!password || !email) {
@@ -217,32 +218,16 @@ app.post('/register', (req, res) => {
 
   }
   console.log("Current userDatabase: ", userDatabase);
-  if (!req.cookies.loginTokenID || !req.cookies.loginTokenPass) {
+  if (!tripleTokenCheck(cookies)) {
     res.clearCookie('badRegister');
     res.clearCookie('duplicateRegister');
     userDatabase[userId] = {
       email,
       password,
     };
-    // Test console logs
-    console.log("request body: ", req.body);
-    console.log("email: ", req.body.email);
-    console.log("password: ", req.body.password);
-    console.log("Updated userDatabase: ", userDatabase);
-    console.log("Request Method: ", req.method);
-    console.log("Request URL: ", req.url);
-    console.log('<<--------------------->>');
     return res.redirect('/login');
   }
   res.redirect('/urls')
-  // Test console logs
-  console.log("request body: ", req.body);
-  console.log("email: ", req.body.email);
-  console.log("password: ", req.body.password);
-  console.log("Updated userDatabase: ", userDatabase);
-  console.log("Request Method: ", req.method);
-  console.log("Request URL: ", req.url);
-  console.log('<<--------------------->>');
 });
 
 // 
@@ -252,38 +237,23 @@ app.post('/register', (req, res) => {
 // Route for get for root
 app.get('/', (req, res) => {
   // Root redirects to /url regardless of tokens
-  console.log("Request Method: ", req.method);
-  console.log("Request URL: ", req.url);
-  console.log("Client request for root, redirect to /urls");
-  console.log('<<--------------------->>');
   return res.redirect("/urls");
 });
 
 // Route for get to urls json page
 app.get('/urls.json', (req, res) => {
   // loginToken cookie values
-  const loginTokenID = req.cookies.loginTokenID;
-  const loginTokenPass = req.cookies.loginTokenPass;
+  const cookies = req.cookies;
   // Template vars contains urlDatabase subsets:
   // Generic and object matched with loginTokenID 
   const templateVars = {
     generic: JSON.stringify(urlDatabase['generic']),
-    iDMatch: JSON.stringify(urlDatabase[loginTokenID]),
+    iDMatch: JSON.stringify(urlDatabase[cookies.loginTokenID]),
   };
-  if (!loginTokenID || !loginTokenPass) {
-    console.log("No loginToken detected");
-    console.log("Displaying urlDatabase generic");
-    console.log("Request Method: ", req.method);
-    console.log("Request URL: ", req.url);
-    console.log("Client request for /urls.json");
-    console.log('<<--------------------->>');
+  if (!tripleTokenCheck(cookies)) {
     return res.send(templateVars.generic);
   }
   
-  console.log("Request Method: ", req.method);
-  console.log("Request URL: ", req.url);
-  console.log("Client request for /urls.json");
-  console.log('<<--------------------->>');
   return res.send(templateVars.iDMatch);
 });
 
@@ -306,36 +276,25 @@ app.get('/urls', (req, res) => {
   }
 
   if (tokenAuthenticator(cookies, userDatabase)) {
-    templateVars.urls = urlDatabase[loginTokenID];
+    templateVars.urls = urlDatabase[cookies.loginTokenID];
   }
 
   res.render('urls_index', templateVars);
-  console.log("Request Method: ", req.method);
-  console.log("Request URL: ", req.url);
-  console.log("Client request for /urls");
-  console.log('<<--------------------->>');
 });
 
 // Route to page with form to post new urls
 app.get('/urls/new', (req, res) => {
   // loginToken cookie values
-  const loginTokenID = req.cookies.loginTokenID;
-  const loginTokenEmail = req.cookies.loginTokenEmail;
-  const loginTokenPass = req.cookies.loginTokenPass;
+  const cookies = req.cookies;
 
   const templateVars = {
     showLogin: false,
-    userEmail: loginTokenEmail,
+    cookies: cookies,
   };
-  if (!loginTokenID || !loginTokenPass) {
+  if (!tripleTokenCheck(cookies)) {
     templateVars.showLogin = true;
   }
   res.render('urls_new', templateVars);
-  // Test Logs
-  console.log("Request Method: ", req.method);
-  console.log("Request URL: ", req.url);
-  console.log("Client request for /urls/new");
-  console.log('<<--------------------->>');
 });
 
 // Route to /register page
@@ -347,20 +306,14 @@ app.get('/register', (req, res) => {
   // Generic and object matched with loginTokenID 
   const templateVars = {
     showLogin: true,
-    urls: urlDatabase[loginTokenID],
-    userEmail: loginTokenEmail,
+    urls: urlDatabase[cookies.loginTokenID],
     cookies: cookies,
   };
-  if (!cookies.loginTokenID || !cookies.loginTokenPass) {
-    templateVars.userEmail = null;
+  if (!tripleTokenCheck(cookies)) {
+    cookies.loginTokenEmail = null;
     return res.render('urls_register', templateVars);
   }
   res.redirect('/urls')
-  // Test Logs
-  console.log("Request Method: ", req.method);
-  console.log("Request URL: ", req.url);
-  console.log("Client request for /register");
-  console.log('<<--------------------->>');
 });
 
 // Route to /login page
@@ -374,7 +327,7 @@ app.get('/login', (req, res) => {
     showLogin: false,
     cookies: cookies,
   };
-  if (!cookies.loginTokenID || !cookies.loginTokenPass) {
+  if (!tripleTokenCheck(cookies)) {
     cookies.loginTokenEmail = null;
     return res.render('urls_login', templateVars);
   }

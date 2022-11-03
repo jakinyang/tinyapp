@@ -95,6 +95,10 @@ app.post('/urls/:id/delete', (req, res) => {
   // loginToken cookie values
   const cookies = req.cookies;
   const id = req.params.id;
+  if (!urlDatabase[id]) {
+    res.status(404);
+    res.redirect('/urls');
+  }
   if (userDatabase[cookies.loginTokenID]) {
     if (tripleTokenCheck(cookies)) {
       if (urlDatabase[cookies.loginTokenID][id]) {
@@ -102,6 +106,7 @@ app.post('/urls/:id/delete', (req, res) => {
         return res.redirect('/urls');
       }
     }
+    res.status(401);
     cookieWiper(cookies);
   }
   /* 
@@ -109,6 +114,7 @@ app.post('/urls/:id/delete', (req, res) => {
     delete urlDatabase['generic'][id]
   } 
   */
+  res.status(401);
   res.redirect('/urls');
 });
 
@@ -123,16 +129,18 @@ app.post('/urls/:id', (req, res) => {
   const templateVars = {
     cookies: cookies,
     id: id,
-    longURL: null, 
+    longURL: null,
   };
   
   if(!longURL) {
+    res.status(400);
     return res.redirect(`/urls/${id}`);
   }
 
   if (!tripleTokenCheck(cookies)) {
     /* templateVars.longURL = urlDatabase['generic'][id];
     urlDatabase['generic'][id] = longURL; */
+    res.status(401);
     return res.redirect(`/urls/${id}`);
   }
   if (userDatabase[cookies.loginTokenID]) {
@@ -141,6 +149,7 @@ app.post('/urls/:id', (req, res) => {
       urlDatabase[cookies.loginTokenID][id] = longURL;
       return res.redirect(`/urls/${id}`);
     }
+    res.status(401);
     cookieWiper(cookies);
     return res.redirect(`/urls/${id}`);
   }
@@ -214,6 +223,7 @@ app.post('/login', (req, res) => {
     // If login matching fails
     // And they don't already have the bad login token
     if (!cookies.badLogin) {
+      res.status(400);
       res.cookie('badLogin', true);
     }
     // Redirect to login and set response status to 403
@@ -284,6 +294,7 @@ app.get('/urls', (req, res) => {
       templateVars.urls = urlDatabase[cookies.loginTokenID];
       res.render('urls_index', templateVars);
     }
+    res.status(401);
     cookieWiper(cookies);
     return res.render('urls_index', templateVars);
   }
@@ -307,6 +318,7 @@ app.get('/urls/:id', (req, res) => {
   if (!tripleTokenCheck(cookies)) {
     const idEvaluation = databaseIterator(urlDatabase, req.params.id);
     if (idEvaluation !== urlDatabase['generic'][req.params.id] || idEvaluation === false) {
+      res.status(401);
       res.cookie('urlAccessDenied', true);
       return res.redirect('/urls')
     }
@@ -321,6 +333,7 @@ app.get('/urls/:id', (req, res) => {
       res.clearCookie('urlAccessDenied');
       return res.render('urls_show', templateVars);
     }
+    res.status(401);
     res.cookie('urlAccessDenied', true);
     return res.redirect('/urls')
   }

@@ -54,11 +54,26 @@ app.use(cookieParser());
 
 // Handling post request from urls/new
 app.post('/urls', (req, res) => {
+  // loginToken cookie values
+  const loginTokenID = req.cookies.loginTokenID;
+  const loginTokenPass = req.cookies.loginTokenPass;
+
+  // New random short urlID
+  const newkey = randomStringGen();
+
+  // Template vars contains urlDatabase subsets:
+  // Generic and object matched with loginTokenID 
   const templateVars = {
-    username: req.cookies["username"],
+    generic: urlDatabase['generic'],
+    iDMatch: urlDatabase[loginTokenID],
   };
-  let newkey = randomStringGen();
-  urlDatabase[newkey] = req.body.longURL;
+  // Checking for login tokens
+  if (!loginTokenID || !loginTokenPass) {
+    urlDatabase['generic'][newkey] = req.body.longURL;
+    return res.redirect(`/urls/${newkey}`);
+  }
+  urlDatabase[loginTokenID] = {};
+  urlDatabase[loginTokenID][newkey] = req.body.longURL;
   console.log("New longURL added: ", req.body.longURL);
   console.log("New shortURL id: ", newkey);
   console.log('URL Database', urlDatabase);
@@ -66,7 +81,7 @@ app.post('/urls', (req, res) => {
   console.log("Request URL: ", req.url);
   console.log("Client post request from /url/new");
   console.log('<<--------------------->>');
-  res.redirect(`/urls/${newkey}`);
+  return res.redirect(`/urls/${newkey}`);
 });
 
 // Handling post delete request from urls/:id/delete
@@ -129,6 +144,7 @@ app.post('/login', (req, res) => {
       console.log("Current database password", password);
       if (userDatabase[id]['email'] === email && userDatabase[id]['password'] === password) {
         res.cookie('loginTokenID', id);
+        res.cookie('loginTokenEmail', email);
         res.cookie('loginTokenPass', userDatabase[id]['password']);
         if (req.cookies.badLogin) {
           console.log("Clearing badLogin token");
@@ -249,10 +265,21 @@ app.get('/urls.json', (req, res) => {
 
 // Route for url page with table of urls IDs and long urls
 app.get('/urls', (req, res) => {
+  // loginToken cookie values
+  const loginTokenID = req.cookies.loginTokenID;
+  const loginTokenEmail = req.cookies.loginTokenEmail;
+  const loginTokenPass = req.cookies.loginTokenPass;
+
+  // Template vars contains urlDatabase subsets:
+  // Generic and object matched with loginTokenID 
   const templateVars = {
-    urls: urlDatabase.generic, 
-    username: req.cookies["username"],
+    urls: null,
+    userEmail: loginTokenEmail,
   };
+  if (!loginTokenID || !loginTokenPass) {
+    templateVars.urls = urlDatabase['generic'];
+  }
+  templateVars.urls = urlDatabase[loginTokenID];
   res.render('urls_index', templateVars);
   console.log("Request Method: ", req.method);
   console.log("Request URL: ", req.url);
@@ -262,8 +289,11 @@ app.get('/urls', (req, res) => {
 
 // Route to page with form to post new urls
 app.get('/urls/new', (req, res) => {
+  // loginToken cookie values
+  const loginTokenEmail = req.cookies.loginTokenEmail;
+
   const templateVars = {
-    username: req.cookies["username"],
+    userEmail: loginTokenEmail,
   };
   res.render('urls_new', templateVars);
   // Test Logs
@@ -301,18 +331,33 @@ app.get('/login', (req, res) => {
 
 // Route to page for given id's url
 app.get('/urls/:id', (req, res) => {
-  const templateVars = { 
+
+  // loginToken cookie values
+  const loginTokenID = req.cookies.loginTokenID;
+  const loginTokenEmail = req.cookies.loginTokenEmail;
+  const loginTokenPass = req.cookies.loginTokenPass;
+
+  // Template vars contains urlDatabase subsets:
+  // Generic and object matched with loginTokenID 
+  const templateVars = {
+    generic: urlDatabase['generic'],
+    iDMatch: urlDatabase[loginTokenID],
+    userEmail: loginTokenEmail,
     id: req.params.id, 
-    longURL: urlDatabase[req.params.id], 
-    username: req.cookies["username"], 
+    longURL: null, 
   };
-  res.render('urls_show', templateVars);
+  
+  if (!loginTokenID || !loginTokenPass) {
+    templateVars.longURL = urlDatabase['generic'][req.params.id];
+  }
+  templateVars.longURL = urlDatabase[loginTokenID][req.params.id];
   // Test Logs
   console.log("longURL: ", templateVars.longURL);
   console.log("Request Method: ", req.method);
   console.log("Request URL: ", req.url);
   console.log(`Client request for /urls/${templateVars.id}`);
   console.log('<<--------------------->>');
+  return res.render('urls_show', templateVars);
 });
 
 // Route for short url redirect

@@ -209,8 +209,21 @@ app.post('/register', (req, res) => {
   const email = req.body.email;
   // If the person is not already logged in
   // -->> Does note have loginToken cookie
+  if (!password || !email) {
+    res.cookie('badRegister', true);
+    return res.redirect('/register');
+  }
+  for (let id in userDatabase) {
+    if (userDatabase[id]['email'] && userDatabase[id]['email'] === email) {
+      res.cookie('duplicateRegister', true);
+      return res.redirect('/register');
+  }
+
+  }
   console.log("Current userDatabase: ", userDatabase);
   if (!req.cookies.loginTokenID || !req.cookies.loginTokenPass) {
+    res.clearCookie('badRegister');
+    res.clearCookie('duplicateRegister');
     userDatabase[userId] = {
       email,
       password,
@@ -337,6 +350,8 @@ app.get('/register', (req, res) => {
   const loginTokenID = req.cookies.loginTokenID;
   const loginTokenEmail = req.cookies.loginTokenEmail;
   const loginTokenPass = req.cookies.loginTokenPass;
+  const badRegister = req.cookies.badRegister;
+  const duplicateRegister = req.cookies.duplicateRegister;
 
   // Template vars contains urlDatabase subsets:
   // Generic and object matched with loginTokenID 
@@ -344,6 +359,8 @@ app.get('/register', (req, res) => {
     showLogin: true,
     urls: urlDatabase[loginTokenID],
     userEmail: loginTokenEmail,
+    badRegister: badRegister,
+    duplicateRegister: duplicateRegister,
   };
   if (!loginTokenID || !loginTokenPass) {
     templateVars.userEmail = null;

@@ -72,7 +72,9 @@ app.post('/urls', (req, res) => {
     urlDatabase['generic'][newkey] = req.body.longURL;
     return res.redirect(`/urls/${newkey}`);
   }
-  urlDatabase[loginTokenID] = {};
+  if (!urlDatabase[loginTokenID]) {
+    urlDatabase[loginTokenID] = {};
+  };
   urlDatabase[loginTokenID][newkey] = req.body.longURL;
   console.log("New longURL added: ", req.body.longURL);
   console.log("New shortURL id: ", newkey);
@@ -243,7 +245,7 @@ app.get('/urls.json', (req, res) => {
   // Template vars contains urlDatabase subsets:
   // Generic and object matched with loginTokenID 
   const templateVars = {
-    generic: JSON.stringinfy(urlDatabase['generic']),
+    generic: JSON.stringify(urlDatabase['generic']),
     iDMatch: JSON.stringify(urlDatabase[loginTokenID]),
   };
   if (!loginTokenID || !loginTokenPass) {
@@ -273,13 +275,12 @@ app.get('/urls', (req, res) => {
   // Template vars contains urlDatabase subsets:
   // Generic and object matched with loginTokenID 
   const templateVars = {
-    urls: null,
+    urls: urlDatabase[loginTokenID],
     userEmail: loginTokenEmail,
   };
   if (!loginTokenID || !loginTokenPass) {
     templateVars.urls = urlDatabase['generic'];
   }
-  templateVars.urls = urlDatabase[loginTokenID];
   res.render('urls_index', templateVars);
   console.log("Request Method: ", req.method);
   console.log("Request URL: ", req.url);
@@ -305,10 +306,21 @@ app.get('/urls/new', (req, res) => {
 
 // Route to /register page
 app.get('/register', (req, res) => {
-  const templateVars = {
+  // loginToken cookie values
+  const loginTokenID = req.cookies.loginTokenID;
+  const loginTokenEmail = req.cookies.loginTokenEmail;
+  const loginTokenPass = req.cookies.loginTokenPass;
 
+  // Template vars contains urlDatabase subsets:
+  // Generic and object matched with loginTokenID 
+  const templateVars = {
+    urls: urlDatabase[loginTokenID],
+    userEmail: loginTokenEmail ? loginTokenEmail : null,
   };
-  res.render('urls_register', templateVars);
+  if (!loginTokenID || !loginTokenPass) {
+    return res.render('urls_register', templateVars);
+  }
+  res.redirect('/urls')
   // Test Logs
   console.log("Request Method: ", req.method);
   console.log("Request URL: ", req.url);
@@ -318,10 +330,22 @@ app.get('/register', (req, res) => {
 
 // Route to /login page
 app.get('/login', (req, res) => {
+  // loginToken cookie values
+  const loginTokenID = req.cookies.loginTokenID;
+  const loginTokenEmail = req.cookies.loginTokenEmail;
+  const loginTokenPass = req.cookies.loginTokenPass;
+
+  // Template vars contains urlDatabase subsets:
+  // Generic and object matched with loginTokenID 
   const templateVars = {
-    "badLogin": req.cookies.badLogin,
+    urls: urlDatabase[loginTokenID],
+    userEmail: loginTokenEmail ? loginTokenEmail : null,
+    badLogin: req.cookies.badLogin ? req.cookies.badLogin : null,
   };
-  res.render('urls_login', templateVars);
+  if (!loginTokenID || !loginTokenPass) {
+    return res.render('urls_login', templateVars);
+  }
+  res.redirect('/urls');
   // Test Logs
   console.log("Request Method: ", req.method);
   console.log("Request URL: ", req.url);

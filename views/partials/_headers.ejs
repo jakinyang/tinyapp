@@ -28,18 +28,6 @@
     </div>
     <% } else { %>
       <!-- Form B -->
-    <div class="form-group row">
-    <form class="form-inline" action="/login" method="POST">
-        <label for="username">Username:</label>
-        <input
-          class="form-control"
-          type="text"
-          name="username"
-          placeholder=""
-          style="width: 300px; margin: 1em"
-        />
-        <button type="submit" class="btn btn-light">Sign In</button>
-    </form>
-  </div>
+      <button class="btn btn-light"><a href="/views/urls_login.ejs">Sign In</a></button>
     <% } %>
   </nav>

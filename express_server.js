@@ -308,7 +308,7 @@ app.get('/login', (req, res) => {
   // Template vars contains urlDatabase subsets:
   // Generic and object matched with loginTokenID 
   const templateVars = {
-    showLogin: false,
+    showLogin: true,
     cookies: cookies,
   };
   if (!tripleTokenCheck(cookies)) {

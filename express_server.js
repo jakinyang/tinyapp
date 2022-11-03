@@ -80,106 +80,71 @@ app.post('/urls', (req, res) => {
 // Handling post delete request from urls/:id/delete
 app.post('/urls/:id/delete', (req, res) => {
   // loginToken cookie values
-  const loginTokenID = req.cookies.loginTokenID;
-  const loginTokenEmail = req.cookies.loginTokenEmail;
-  const loginTokenPass = req.cookies.loginTokenPass;
+  const cookies = req.cookies;
   const id = req.params.id;
-
-  if (urlDatabase[loginTokenID][id]) {
-    delete urlDatabase[loginTokenID][id];
+  if (tripleTokenCheck(cookies)) {
+    if (urlDatabase[cookies.loginTokenID][id]) {
+      delete urlDatabase[cookies.loginTokenID][id];
+      return res.redirect('/urls');
+    }
   }
-  console.log('Updated urlDatabase: ', urlDatabase);
-  console.log("Request Method: ", req.method);
-  console.log("Request URL: ", req.url);
-  console.log(`Client request for post delete /urls/${req.params.id}/delete`);
-  console.log('<<--------------------->>');
+  if(urlDatabase['generic'][id]) {
+    delete urlDatabase['generic'][id]
+  }
   res.redirect('/urls');
 });
 
 // Handling post update request from urls/:id/
 app.post('/urls/:id', (req, res) => {
   // loginToken cookie values
-  const loginTokenID = req.cookies.loginTokenID;
-  const loginTokenEmail = req.cookies.loginTokenEmail;
-  const loginTokenPass = req.cookies.loginTokenPass;
-
+  const cookies = req.cookies;
+  const id = req.params.id;
+  const longURL = req.body.longURL;
   // Template vars contains urlDatabase subsets:
   // Generic and object matched with loginTokenID 
   const templateVars = {
-    generic: urlDatabase['generic'],
-    iDMatch: urlDatabase[loginTokenID],
-    userEmail: loginTokenEmail,
-    id: req.params.id, 
+    cookies: cookies,
+    id: id,
     longURL: null, 
   };
   
-  if (!loginTokenID || !loginTokenPass) {
-    templateVars.longURL = urlDatabase['generic'][req.params.id];
-    urlDatabase['generic'][req.params.id] = req.body.longURL;
+  if (!tripleTokenCheck(cookies)) {
+    templateVars.longURL = urlDatabase['generic'][id];
+    urlDatabase['generic'][id] = longURL;
+    return res.redirect(`/urls/${req.params.id}`);
   }
-  templateVars.longURL = urlDatabase[loginTokenID][req.params.id];
-  urlDatabase[loginTokenID][req.params.id] = req.body.longURL;
-  
-  console.log('Current urlDatabase: ', urlDatabase);
-  console.log("id: ", req.params.id);
-  console.log("longURL: ", req.body.longURL);
-  // Conditional: if browser has login cookie && cookie marker matches a 
 
-  // If not
-  console.log('Updated urlDatabase: ', urlDatabase);
-  console.log("Request Method: ", req.method);
-  console.log("Request URL: ", req.url);
-  console.log(`Client request for post update /urls/${templateVars.id} to ${req.body.longURL}`);
-  console.log('<<--------------------->>');
-  res.redirect(`/urls/${req.params.id}`);
+  templateVars.longURL = urlDatabase[cookies.loginTokenID][id];
+  urlDatabase[cookies.loginTokenID][id] = longURL;
+  return res.redirect(`/urls/${req.params.id}`);
 });
 
 // Handling post request for /login
 app.post('/login', (req, res) => {
   const password = req.body.password;
   const email = req.body.email;
-  console.log("Cookies", req.cookies.badLogin);
+  const cookies = req.cookies;
   // If they are not logged in
   // They don't have one of the loginTokens or they don't have both loginTokens
-  if (!req.cookies.loginTokenID || !req.cookies.loginTokenPass) {
-    console.log("No loginTokens detected");
-    console.log("Cycling through userDatabase");
-    console.log("Current user input email", email);
-    console.log("Current user input password", password);
+  if (!tripleTokenCheck(cookies)) {
     for (let id in userDatabase) {
-      console.log("Current database email", userDatabase[id]['email']);
-      console.log("Current database password", userDatabase[id]['password']);
-      console.log("Current user input email", email);
-      console.log("Current database password", password);
       if (userDatabase[id]['email'] === email && userDatabase[id]['password'] === password) {
         res.cookie('loginTokenID', id);
         res.cookie('loginTokenEmail', email);
         res.cookie('loginTokenPass', userDatabase[id]['password']);
         if (req.cookies.badLogin) {
-          console.log("Clearing badLogin token");
           res.clearCookie('badLogin');
         }
-        console.log("Redirecting to /urls");
         return res.redirect('/urls');
       }
     }
-    console.log("No user input matches in userDatabase");
-    if (!req.cookies.badLogin) {
-      console.log("Applying badLoginToken");
+    if (!cookies.badLogin) {
       res.cookie('badLogin', true);
     }
-    console.log("Redirecting to /login");
-    console.log('<<--------------------->>');
     return res.redirect('/login');
   }
   // If they are logged in
   // They have both loginTokens
-  console.log('Login tokens detected');
-  console.log('Redirecting to /urls');
-  console.log("request body: ", req.body);
-  console.log("Request Method: ", req.method);
-  console.log("Request URL: ", req.url);
-  console.log('<<--------------------->>');
   return res.redirect('/urls')
 });
 
@@ -189,12 +154,6 @@ app.post('/logout', (req, res) => {
   res.clearCookie('loginTokenEmail');
   res.clearCookie('loginTokenPass');
   res.redirect('/urls');
-  console.log("cookies:", req.cookies);
-  console.log("username: ", req.body.username);
-  console.log("request body: ", req.body);
-  console.log("Request Method: ", req.method);
-  console.log("Request URL: ", req.url);
-  console.log('<<--------------------->>');
 });
 
 // Handling post request for /regsiter
@@ -214,10 +173,8 @@ app.post('/register', (req, res) => {
     if (userDatabase[id]['email'] && userDatabase[id]['email'] === email) {
       res.cookie('duplicateRegister', true);
       return res.redirect('/register');
+    }
   }
-
-  }
-  console.log("Current userDatabase: ", userDatabase);
   if (!tripleTokenCheck(cookies)) {
     res.clearCookie('badRegister');
     res.clearCookie('duplicateRegister');

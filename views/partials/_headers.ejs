@@ -28,6 +28,8 @@
     </div>
     <% } else { %>
       <!-- Form B -->
-      <button class="btn btn-light"><a href="/views/urls_login.ejs">Sign In</a></button>
+      <% if (showLogin) { %>
+      <button class="btn btn-light"><a href="/login">Sign In</a></button>
+      <% } %>
     <% } %>
   </nav>

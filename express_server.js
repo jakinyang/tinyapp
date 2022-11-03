@@ -3,11 +3,12 @@ const express = require('express');
 // Requiring randomStringGen
 const { randomStringGen } = require('./randomGenerator');
 // Requiring helperModules
-const { databaseIterator, tokenAuthenticator, tripleTokenCheck } = require('./helperModules');
+const { databaseIterator, tokenAuthenticator, tripleTokenCheck, cookieWiper } = require('./helperModules');
 // Require morgan
 const morgan = require('morgan');
 // Requiring cookieParser
 const cookieParser = require('cookie-parser');
+const { cookie } = require('request');
 // Assign the server instance to a const
 const app = express();
 
@@ -67,16 +68,24 @@ app.post('/urls', (req, res) => {
     return res.redirect(`/urls/${newkey}`);
   }
   // Checking that login tokens are all intermatching
-  if (tokenAuthenticator(cookies, userDatabase)) {
-    if (!urlDatabase[cookies.loginTokenID]) {
-      // If first time making new tinyURL, initialize object for ID
-      urlDatabase[cookies.loginTokenID] = {};
-    };
-    // Post long url and ID in object at loginTokenID
-    urlDatabase[cookies.loginTokenID][newkey] = req.body.longURL;
-    return res.redirect(`/urls/${newkey}`);
+  if (userDatabase[cookies.loginTokenID]) {
+    if (tokenAuthenticator(cookies, userDatabase)) {
+      if (!urlDatabase[cookies.loginTokenID]) {
+        // If first time making new tinyURL, initialize object for ID
+        urlDatabase[cookies.loginTokenID] = {};
+      };
+      // Post long url and ID in object at loginTokenID
+      urlDatabase[cookies.loginTokenID][newkey] = req.body.longURL;
+      return res.redirect(`/urls/${newkey}`);
+    }
+    // If the browser/client has loginToken cookies
+    //  but they don't match any in the system
+    //  then redirect with generic
+    cookieWiper(cookies);
+    urlDatabase['generic'][newkey] = req.body.longURL;
+    return res.reditect('/urls');
   }
-  // If logins tokens don't match
+  // Vague edge-cases, just redirect to generic
   urlDatabase['generic'][newkey] = req.body.longURL;
   return res.reditect('/urls')
 });
@@ -86,11 +95,14 @@ app.post('/urls/:id/delete', (req, res) => {
   // loginToken cookie values
   const cookies = req.cookies;
   const id = req.params.id;
-  if (tripleTokenCheck(cookies)) {
-    if (urlDatabase[cookies.loginTokenID][id]) {
-      delete urlDatabase[cookies.loginTokenID][id];
-      return res.redirect('/urls');
+  if (userDatabase[cookies.loginTokenID]) {
+    if (tripleTokenCheck(cookies)) {
+      if (urlDatabase[cookies.loginTokenID][id]) {
+        delete urlDatabase[cookies.loginTokenID][id];
+        return res.redirect('/urls');
+      }
     }
+    cookieWiper(cookies);
   }
   /* 
   if(urlDatabase['generic'][id]) {
@@ -119,14 +131,19 @@ app.post('/urls/:id', (req, res) => {
   }
 
   if (!tripleTokenCheck(cookies)) {
-    templateVars.longURL = urlDatabase['generic'][id];
-    urlDatabase['generic'][id] = longURL;
-    return res.redirect(`/urls/${req.params.id}`);
+    /* templateVars.longURL = urlDatabase['generic'][id];
+    urlDatabase['generic'][id] = longURL; */
+    return res.redirect(`/urls/${id}`);
   }
-
-  templateVars.longURL = urlDatabase[cookies.loginTokenID][id];
-  urlDatabase[cookies.loginTokenID][id] = longURL;
-  return res.redirect(`/urls/${req.params.id}`);
+  if (userDatabase[cookies.loginTokenID]) {
+    if (tokenAuthenticator(cookies, userDatabase)) {
+      templateVars.longURL = urlDatabase[cookies.loginTokenID][id];
+      urlDatabase[cookies.loginTokenID][id] = longURL;
+      return res.redirect(`/urls/${id}`);
+    }
+    cookieWiper(cookies);
+    return res.redirect(`/urls/${id}`);
+  }
 });
 
 // Handling post request for /regsiter
@@ -210,9 +227,11 @@ app.post('/login', (req, res) => {
 
 // Handling post request for /logout
 app.post('/logout', (req, res) => {
-  res.clearCookie('loginTokenID');
+  const cookies = req.cookies;
+  cookieWiper(cookies);
+  /* res.clearCookie('loginTokenID');
   res.clearCookie('loginTokenEmail');
-  res.clearCookie('loginTokenPass');
+  res.clearCookie('loginTokenPass'); */
   res.redirect('/login');
 });
 
@@ -260,12 +279,62 @@ app.get('/urls', (req, res) => {
     templateVars.showLogin = true;
     return res.render('urls_index', templateVars);
   }
-
-  if (tokenAuthenticator(cookies, userDatabase)) {
-    templateVars.urls = urlDatabase[cookies.loginTokenID];
+  if (userDatabase[cookies.loginTokenID]) {
+    if (tokenAuthenticator(cookies, userDatabase)) {
+      templateVars.urls = urlDatabase[cookies.loginTokenID];
+      res.render('urls_index', templateVars);
+    }
+    cookieWiper(cookies);
+    return res.render('urls_index', templateVars);
   }
+});
 
-  res.render('urls_index', templateVars);
+// Route to page for given id's url
+app.get('/urls/:id', (req, res) => {
+
+  // loginToken cookie values
+  const cookies = req.cookies;
+
+  // Template vars contains urlDatabase subsets:
+  // Generic and object matched with loginTokenID 
+  const templateVars = {
+    showLogin: false,
+    id: req.params.id, 
+    longURL: null, 
+    cookies: cookies,
+  };
+  
+  if (!tripleTokenCheck(cookies)) {
+    const idEvaluation = databaseIterator(urlDatabase, req.params.id);
+    if (idEvaluation !== urlDatabase['generic'][req.params.id] || idEvaluation === false) {
+      res.cookie('urlAccessDenied', true);
+      return res.redirect('/urls')
+    }
+    templateVars.showLogin = true;
+    templateVars.longURL = urlDatabase['generic'][req.params.id];
+    res.clearCookie('urlAccessDenied');
+    return res.render('urls_show', templateVars);
+  }
+  if (userDatabase[cookies.loginTokenID]) {
+    if (tokenAuthenticator(cookies, userDatabase)) {
+      templateVars.longURL = urlDatabase[cookies.loginTokenID][req.params.id];
+      res.clearCookie('urlAccessDenied');
+      return res.render('urls_show', templateVars);
+    }
+    res.cookie('urlAccessDenied', true);
+    return res.redirect('/urls')
+  }
+});
+
+// Route for short url redirect
+app.get('/u/:id', (req, res) => {
+  let targetURL = databaseIterator(urlDatabase, req.params.id);
+  if(!targetURL) {
+    res.status(404);
+    res.send('Cannot find url id');
+  }
+  
+  res.redirect(targetURL);
 });
 
 // Route to page with form to post new urls
@@ -318,51 +387,6 @@ app.get('/login', (req, res) => {
     return res.render('urls_login', templateVars);
   }
   res.redirect('/urls');
-});
-
-// Route to page for given id's url
-app.get('/urls/:id', (req, res) => {
-
-  // loginToken cookie values
-  const cookies = req.cookies;
-
-  // Template vars contains urlDatabase subsets:
-  // Generic and object matched with loginTokenID 
-  const templateVars = {
-    showLogin: false,
-    id: req.params.id, 
-    longURL: null, 
-    cookies: cookies,
-  };
-  
-  
-  if (!tripleTokenCheck(cookies)) {
-    const idEvaluation = databaseIterator(urlDatabase, req.params.id);
-    if (idEvaluation !== urlDatabase['generic'][req.params.id] || idEvaluation === false) {
-      res.cookie('urlAccessDenied', true);
-      return res.redirect('/urls')
-    }
-    templateVars.showLogin = true;
-    templateVars.longURL = urlDatabase['generic'][req.params.id];
-    res.clearCookie('urlAccessDenied');
-    return res.render('urls_show', templateVars);
-  }
-  if (tokenAuthenticator(cookies, userDatabase)) {
-    templateVars.longURL = urlDatabase[cookies.loginTokenID][req.params.id];
-  }
-  res.clearCookie('urlAccessDenied');
-  return res.render('urls_show', templateVars);
-});
-
-// Route for short url redirect
-app.get('/u/:id', (req, res) => {
-  let targetURL = databaseIterator(urlDatabase, req.params.id);
-  if(!targetURL) {
-    res.status(404);
-    res.send('Cannot find url id');
-  }
-  
-  res.redirect(targetURL);
 });
 
 // Setting up listener

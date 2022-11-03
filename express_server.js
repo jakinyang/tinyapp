@@ -48,6 +48,10 @@ app.use(cookieParser());
 // Main code and request handlers
 // 
 
+// 
+// POST REQUESTS
+// 
+
 // Handling post request from urls/new
 app.post('/urls', (req, res) => {
   const templateVars = {
@@ -207,26 +211,40 @@ app.post('/register', (req, res) => {
 
 // Route for get for root
 app.get('/', (req, res) => {
-  const templateVars = {
-    username: req.cookies["username"],
-  };
+  // Root redirects to /url regardless of tokens
   console.log("Request Method: ", req.method);
   console.log("Request URL: ", req.url);
   console.log("Client request for root, redirect to /urls");
   console.log('<<--------------------->>');
-  res.redirect("/urls");
+  return res.redirect("/urls");
 });
 
 // Route for get to urls json page
 app.get('/urls.json', (req, res) => {
+  // Template vars contains urlDatabase subsets:
+  // Generic and object matched with loginTokenID 
   const templateVars = {
-    username: req.cookies["username"],
+    generic: urlDatabase['generic'],
+    iDMatch: urlDatabase[loginTokenID],
   };
-  res.send(urlDatabase);
+  // loginToken cookie values
+  const loginTokenID = req.cookies.loginTokenID;
+  const loginTokenPass = req.cookies.loginTokenPass;
+  if (!loginTokenID || !loginTokenPass) {
+    console.log("No loginToken detected");
+    console.log("Displaying urlDatabase generic");
+    console.log("Request Method: ", req.method);
+    console.log("Request URL: ", req.url);
+    console.log("Client request for /urls.json");
+    console.log('<<--------------------->>');
+    return res.send(urlDatabase['generic']);
+  }
+  
   console.log("Request Method: ", req.method);
   console.log("Request URL: ", req.url);
   console.log("Client request for /urls.json");
   console.log('<<--------------------->>');
+  return res.send(urlDatabase[loginTokenID]);
 });
 
 // Route for url page with table of urls IDs and long urls

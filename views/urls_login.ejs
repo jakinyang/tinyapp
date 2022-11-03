@@ -16,7 +16,7 @@
 <body>
   <main style="margin: 1em;">
     <h3>Login</h3>
-    <% if (badLogin) { %>
+    <% if (cookies.badLogin) { %>
     <h4 class="text-danger">Bad login credentials</h4>
     <% } %>
     <form class="form-inline" action="/login" method="POST">

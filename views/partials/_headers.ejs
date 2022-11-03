@@ -18,10 +18,10 @@
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
       </div>
     </div>
-    <% if (userEmail) { %>
+    <% if (cookies.loginTokenEmail) { %>
       <!-- Form A -->
     <div class="form-group row">
-      <div><%= userEmail %></div>
+      <div><%= cookies.loginTokenEmail %></div>
       <form class="form-inline" action="/logout" method="POST">
         <button type="submit" class="btn btn-light"> Log Out</button>
       </form>
@@ -32,4 +32,8 @@
         <a href="/login"><button class="btn btn-light">Sign In</button></a>
       <% } %>
     <% } %>
+
+    <% if (cookies.urlAccessDenied) { %>
+      <h4 class="text-danger">Invalid url id parameter</h4>
+      <% } %>
   </nav>

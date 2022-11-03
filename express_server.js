@@ -2,6 +2,8 @@
 const express = require('express');
 // Requiring randomStringGen
 const { randomStringGen } = require('./randomGenerator');
+// Requiring helperModules
+const { databaseIterator, tokenAuthenticator } = require('./helperModules');
 // Require morgan
 const morgan = require('morgan');
 // Requiring cookieParser
@@ -38,7 +40,7 @@ app.set('view engine', 'ejs');
 // Middleware to take in form POST and encode as url
 app.use(express.urlencoded({ extended: true}));
 
-// Morgan
+// Morgan for terminal logging
 app.use(morgan('dev'));
 
 // Middleware to handle cookies
@@ -72,30 +74,24 @@ app.post('/urls', (req, res) => {
   };
   // Post long url and ID in object at loginTokenID
   urlDatabase[loginTokenID][newkey] = req.body.longURL;
-  console.log("New longURL added: ", req.body.longURL);
-  console.log("New shortURL id: ", newkey);
-  console.log('URL Database', urlDatabase);
-  console.log("Request Method: ", req.method);
-  console.log("Request URL: ", req.url);
-  console.log("Client post request from /url/new");
-  console.log('<<--------------------->>');
   return res.redirect(`/urls/${newkey}`);
 });
 
 // Handling post delete request from urls/:id/delete
 app.post('/urls/:id/delete', (req, res) => {
-  const templateVars = { 
-    id: req.params.id, 
-    longURL: urlDatabase[req.params.id], 
-    username: req.cookies["username"], 
-  };
-  console.log('Current urlDatabase: ', urlDatabase);
-  console.log("Deleting: ", templateVars.id, templateVars.longURL);
-  delete urlDatabase[templateVars.id];
+  // loginToken cookie values
+  const loginTokenID = req.cookies.loginTokenID;
+  const loginTokenEmail = req.cookies.loginTokenEmail;
+  const loginTokenPass = req.cookies.loginTokenPass;
+  const id = req.params.id;
+
+  if (urlDatabase[loginTokenID][id]) {
+    delete urlDatabase[loginTokenID][id];
+  }
   console.log('Updated urlDatabase: ', urlDatabase);
   console.log("Request Method: ", req.method);
   console.log("Request URL: ", req.url);
-  console.log(`Client request for post delete /urls/${templateVars.id}/delete`);
+  console.log(`Client request for post delete /urls/${req.params.id}/delete`);
   console.log('<<--------------------->>');
   res.redirect('/urls');
 });
@@ -297,6 +293,7 @@ app.get('/urls', (req, res) => {
   const loginTokenID = req.cookies.loginTokenID;
   const loginTokenEmail = req.cookies.loginTokenEmail;
   const loginTokenPass = req.cookies.loginTokenPass;
+  const urlAccessDenied = req.cookies.urlAccessDenied;
 
   // Template vars contains urlDatabase subsets:
   // Generic and object matched with loginTokenID 
@@ -304,6 +301,7 @@ app.get('/urls', (req, res) => {
     showLogin: false,
     urls: urlDatabase['generic'],
     userEmail: loginTokenEmail,
+    urlAccessDenied: urlAccessDenied,
   };
 
   if (!loginTokenID || !loginTokenPass || !loginTokenEmail) {
@@ -347,11 +345,7 @@ app.get('/urls/new', (req, res) => {
 // Route to /register page
 app.get('/register', (req, res) => {
   // loginToken cookie values
-  const loginTokenID = req.cookies.loginTokenID;
-  const loginTokenEmail = req.cookies.loginTokenEmail;
-  const loginTokenPass = req.cookies.loginTokenPass;
-  const badRegister = req.cookies.badRegister;
-  const duplicateRegister = req.cookies.duplicateRegister;
+  const cookies = req.cookies;
 
   // Template vars contains urlDatabase subsets:
   // Generic and object matched with loginTokenID 
@@ -359,10 +353,9 @@ app.get('/register', (req, res) => {
     showLogin: true,
     urls: urlDatabase[loginTokenID],
     userEmail: loginTokenEmail,
-    badRegister: badRegister,
-    duplicateRegister: duplicateRegister,
+    cookies: cookies,
   };
-  if (!loginTokenID || !loginTokenPass) {
+  if (!cookies.loginTokenID || !cookies.loginTokenPass) {
     templateVars.userEmail = null;
     return res.render('urls_register', templateVars);
   }
@@ -377,18 +370,16 @@ app.get('/register', (req, res) => {
 // Route to /login page
 app.get('/login', (req, res) => {
   // loginToken cookie values
-  const loginTokenID = req.cookies.loginTokenID;
-  const loginTokenEmail = req.cookies.loginTokenEmail;
-  const loginTokenPass = req.cookies.loginTokenPass;
+  const cookies = req.cookies;
 
   // Template vars contains urlDatabase subsets:
   // Generic and object matched with loginTokenID 
   const templateVars = {
     showLogin: false,
     userEmail: loginTokenEmail,
-    badLogin: req.cookies.badLogin ? req.cookies.badLogin : null,
+    cookies: cookies,
   };
-  if (!loginTokenID || !loginTokenPass) {
+  if (!cookies.loginTokenID || !cookies.loginTokenPass) {
     templateVars.userEmail = null;
     return res.render('urls_login', templateVars);
   }
@@ -404,59 +395,41 @@ app.get('/login', (req, res) => {
 app.get('/urls/:id', (req, res) => {
 
   // loginToken cookie values
-  const loginTokenID = req.cookies.loginTokenID;
-  const loginTokenEmail = req.cookies.loginTokenEmail;
-  const loginTokenPass = req.cookies.loginTokenPass;
+  const cookies = req.cookies;
 
   // Template vars contains urlDatabase subsets:
   // Generic and object matched with loginTokenID 
   const templateVars = {
     showLogin: false,
-    userEmail: loginTokenEmail,
     id: req.params.id, 
     longURL: null, 
+    cookies: cookies,
   };
   
-  if (!loginTokenID || !loginTokenPass) {
+  
+  if (!cookies.loginTokenID || !cookies.loginTokenPass) {
+    const idEvaluation = databaseIterator(urlDatabase, req.params.id);
+    if (idEvaluation !== urlDatabase['generic'][req.params.id] || idEvaluation === false) {
+      res.cookie('urlAccessDenied', true);
+      return res.redirect('/urls')
+    }
     templateVars.showLogin = true;
     templateVars.longURL = urlDatabase['generic'][req.params.id];
+    res.clearCookie('urlAccessDenied');
+    return res.render('urls_show', templateVars);
   }
-  if (loginTokenEmail === userDatabase[loginTokenID]['email'] && loginTokenPass === userDatabase[loginTokenID]['password']) {
-    templateVars.longURL = urlDatabase[loginTokenID][req.params.id];
+  if (tokenAuthenticator(cookies, userDatabase)) {
+    templateVars.longURL = urlDatabase[cookies.loginTokenID][req.params.id];
   }
-  // Test Logs
-  console.log("longURL: ", templateVars.longURL);
-  console.log("Request Method: ", req.method);
-  console.log("Request URL: ", req.url);
-  console.log(`Client request for /urls/${templateVars.id}`);
-  console.log('<<--------------------->>');
+  res.clearCookie('urlAccessDenied');
   return res.render('urls_show', templateVars);
 });
 
 // Route for short url redirect
 app.get('/u/:id', (req, res) => {
-  const databaseIterator = (database, targetId) => {
-    console.log('Looping through', database);
-    for (let subDatabase in database) {
-      console.log('Looping through', subDatabase);
-      for (let id in database[subDatabase]) {
-        console.log('Current id: ', database[subDatabase][id]);
-        if (id === targetId) {
-          console.log('Returning value: ', database[subDatabase][id]);
-          return database[subDatabase][id];
-        }
-      }
-    }
-  }
   let targetURL = databaseIterator(urlDatabase, req.params.id);
   
   res.redirect(targetURL);
-  // Test Logs
-  console.log("longURL: ", targetURL);
-  console.log("Request Method: ", req.method);
-  console.log("Request URL: ", req.url);
-  console.log("Client request for /urls/id");
-  console.log('<<--------------------->>');
 });
 
 // Setting up listener

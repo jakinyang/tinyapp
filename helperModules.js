@@ -19,7 +19,7 @@ const tokenAuthenticator = (tokenObject, database) => {
   const id = tokenObject.loginTokenID;
   const email = tokenObject.loginTokenEmail;
   const password = tokenObject.loginTokenPass;
-  if (email === database[id]['email'] && password === database[id]['password']) {
+  if (email === database[id]['email'] && password === database[id]['password'] && id === database[id]['userId']) {
     return true;
   }
   return false;

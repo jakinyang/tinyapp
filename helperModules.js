@@ -1,5 +1,5 @@
 /**
- * Iterates over nested objects and returns the nested object with key that matches targetId. If no match, returns false
+ * Iterates over nested objects and returns the nested object with email that matches targetEmail. If no match, returns false
  * */
 const userRetrieverEmail = (database, targetEmail) => {
   for (let subDatabase in database) {
@@ -17,7 +17,7 @@ const userRetrieverEmail = (database, targetEmail) => {
 /**
  * Iterates over nested objects and returns the nested object with key that matches targetId. If no match, returns false
  * */
-const userRetrieverID = (database, targetId) => {
+const targetRetrieverID = (database, targetId) => {
   for (let subDatabase in database) {
     for (let id in database[subDatabase]) {
       if (id === targetId) {
@@ -97,4 +97,4 @@ const randomStringGen = () => {
   return outputArr.join('');
 };
 
-module.exports = { userRetrieverID, userRetrieverEmail, tokenAuthenticator, tripleTokenCheck, cookieWiper, randomStringGen }
+module.exports = { targetRetrieverID, userRetrieverEmail, tokenAuthenticator, tripleTokenCheck, cookieWiper, randomStringGen }

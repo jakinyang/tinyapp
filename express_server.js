@@ -5,7 +5,7 @@ const cookieSession = require('cookie-session')
 // Require bcryptjs
 const bcrypt = require('bcryptjs');
 // Requiring helperModules
-const { userRetrieverID, userRetrieverEmail, tokenAuthenticator, tripleTokenCheck, cookieWiper, randomStringGen } = require('./helperModules');
+const { targetRetrieverID, userRetrieverEmail, tokenAuthenticator, tripleTokenCheck, cookieWiper, randomStringGen } = require('./helperModules');
 // Require morgan
 const morgan = require('morgan');
 // Requiring cookieParser
@@ -332,7 +332,7 @@ app.get('/urls/:id', (req, res) => {
   };
   
   if (!tripleTokenCheck(cookies)) {
-    const idEvaluation = userRetrieverID(urlDatabase, req.params.id);
+    const idEvaluation = targetRetrieverID(urlDatabase, req.params.id);
     if (idEvaluation !== urlDatabase['generic'][req.params.id] || idEvaluation === false) {
       res.status(401);
       req.session.urlAccessDenied = true;
@@ -357,7 +357,7 @@ app.get('/urls/:id', (req, res) => {
 
 // Route for short url redirect
 app.get('/u/:id', (req, res) => {
-  let targetURL = userRetrieverID(urlDatabase, req.params.id);
+  let targetURL = targetRetrieverID(urlDatabase, req.params.id);
   if(!targetURL) {
     res.status(404);
     res.send('Cannot find url id');

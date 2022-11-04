@@ -14,9 +14,9 @@ const app = express();
 
 const PORT = 8080;
 
-//
-// Mock Databases
-//
+// <<------------------>>
+// <<- Mock Databases ->>
+// <<------------------>>
 
 // URL Database - Stand in for a backend database
 const urlDatabase = {
@@ -27,13 +27,11 @@ const urlDatabase = {
 };
 
 // User database
-const userDatabase = {
-  
-};
+const userDatabase = {};
 
-//
-// Set up & middleware
-//
+// <<----------------------->>
+// <<- Set up & middleware ->>
+// <<----------------------->>
 
 // View engine that will render ejs as html
 app.set('view engine', 'ejs');
@@ -50,76 +48,174 @@ app.use(cookieSession({
   keys: ['1a0b2c9d3e8', 'fOrTmOo2000'],
 }));
 
-//
-// Main code and request handlers
-//
+// <<-------------------------------->>
+// <<- MAIN CODE + REQUEST HANDLERS ->>
+// <<-------------------------------->>
 
-//
-// POST REQUESTS
-//
+// <<-------------->>
+// <<--- BROWSE --->>
+// <<-------------->>
 
-// Handling post request from urls/new
-app.post('/urls', (req, res) => {
-  // loginToken cookie values
-  const cookies = req.session;
-  // New random short urlID
-  const newkey = randomStringGen();
-
-  // Checking for login tokens -->> if not logged in
-  if (!tripleTokenCheck(cookies)) {
-    urlDatabase['generic'][newkey] = req.body.longURL;
-    return res.redirect(`/urls/${newkey}`);
-  }
-  // Checking that login tokens are all intermatching
-  if (userDatabase[cookies.loginTokenID]) {
-    if (tokenAuthenticator(cookies, userDatabase)) {
-      if (!urlDatabase[cookies.loginTokenID]) {
-        // If first time making new tinyURL, initialize object for ID
-        urlDatabase[cookies.loginTokenID] = {};
-      }
-      // Post long url and ID in object at loginTokenID
-      urlDatabase[cookies.loginTokenID][newkey] = req.body.longURL;
-      return res.redirect(`/urls/${newkey}`);
-    }
-    // If the browser/client has loginToken cookies
-    //  but they don't match any in the system
-    //  then redirect with generic
-    cookieWiper(req);
-    urlDatabase['generic'][newkey] = req.body.longURL;
-    return res.redirect('/urls');
-  }
-  // Vague edge-cases, just redirect to generic
-  urlDatabase['generic'][newkey] = req.body.longURL;
-  return res.redirect('/urls');
+// Route for get for root
+app.get('/', (req, res) => {
+  // Root redirects to /url regardless of tokens
+  return res.redirect("/urls");
 });
 
-// Handling post delete request from urls/:id/delete
-app.post('/urls/:id/delete', (req, res) => {
+// Route for get to urls json page
+app.get('/urls.json', (req, res) => {
   // loginToken cookie values
   const cookies = req.session;
-  const id = req.params.id;
-  if (!urlDatabase[id]) {
-    res.status(404);
-    res.redirect('/urls');
+  // Template vars contains urlDatabase subsets:
+  // Generic and object matched with loginTokenID
+  const templateVars = {
+    generic: JSON.stringify(urlDatabase['generic']),
+    iDMatch: JSON.stringify(urlDatabase[cookies.loginTokenID]),
+  };
+  if (!tripleTokenCheck(cookies)) {
+    return res.send(templateVars.generic);
+  }
+  
+  return res.send(templateVars.iDMatch);
+});
+
+// Route for url page with table of urls IDs and long urls
+app.get('/urls', (req, res) => {
+  // loginToken cookie values
+  const cookies = req.session;
+
+  // Template vars contains urlDatabase subsets:
+  // Generic and object matched with loginTokenID
+  const templateVars = {
+    showLogin: false,
+    urls: urlDatabase['generic'],
+    cookies: cookies,
+  };
+
+  if (!tripleTokenCheck(cookies)) {
+    templateVars.showLogin = true;
+    return res.render('urls_index', templateVars);
   }
   if (userDatabase[cookies.loginTokenID]) {
-    if (tripleTokenCheck(cookies)) {
-      if (urlDatabase[cookies.loginTokenID][id]) {
-        delete urlDatabase[cookies.loginTokenID][id];
-        return res.redirect('/urls');
-      }
+    if (tokenAuthenticator(cookies, userDatabase)) {
+      templateVars.urls = urlDatabase[cookies.loginTokenID];
+      res.render('urls_index', templateVars);
     }
     res.status(401);
     cookieWiper(req);
+    return res.render('urls_index', templateVars);
   }
-  /*
-  if(urlDatabase['generic'][id]) {
-    delete urlDatabase['generic'][id]
+});
+
+// Route to page with form to post new urls
+app.get('/urls/new', (req, res) => {
+  // loginToken cookie values
+  const cookies = req.session;
+
+  const templateVars = {
+    showLogin: false,
+    cookies: cookies,
+  };
+  if (!tripleTokenCheck(cookies)) {
+    templateVars.showLogin = true;
   }
-  */
-  res.status(401);
+  res.render('urls_new', templateVars);
+});
+
+// Route to /register page
+app.get('/register', (req, res) => {
+  // loginToken cookie values
+  const cookies = req.session;
+
+  // Template vars contains urlDatabase subsets:
+  // Generic and object matched with loginTokenID
+  const templateVars = {
+    showLogin: true,
+    urls: urlDatabase[cookies.loginTokenID],
+    cookies: cookies,
+  };
+  if (!tripleTokenCheck(cookies)) {
+    cookies.loginTokenEmail = null;
+    return res.render('urls_register', templateVars);
+  }
   res.redirect('/urls');
 });
+
+// Route to /login page
+app.get('/login', (req, res) => {
+  // loginToken cookie values
+  const cookies = req.session;
+
+  // Template vars contains urlDatabase subsets:
+  // Generic and object matched with loginTokenID
+  const templateVars = {
+    showLogin: true,
+    cookies: cookies,
+  };
+  if (!tripleTokenCheck(cookies)) {
+    cookies.loginTokenEmail = null;
+    return res.render('urls_login', templateVars);
+  }
+  res.redirect('/urls');
+});
+
+// <<-------------->>
+// <<---- READ ---->>
+// <<-------------->>
+
+// Route to page for given id's url
+app.get('/urls/:id', (req, res) => {
+
+  // loginToken cookie values
+  const cookies = req.session;
+
+  // Template vars contains urlDatabase subsets:
+  // Generic and object matched with loginTokenID
+  const templateVars = {
+    showLogin: false,
+    id: req.params.id,
+    longURL: null,
+    cookies: cookies,
+  };
+  
+  if (!tripleTokenCheck(cookies)) {
+    const idEvaluation = targetRetrieverID(urlDatabase, req.params.id);
+    if (idEvaluation !== urlDatabase['generic'][req.params.id] || idEvaluation === false) {
+      res.status(401);
+      req.session.urlAccessDenied = true;
+      return res.redirect('/urls');
+    }
+    templateVars.showLogin = true;
+    templateVars.longURL = urlDatabase['generic'][req.params.id];
+    req.session.urlAccessDenied = null;
+    return res.render('urls_show', templateVars);
+  }
+  if (userDatabase[cookies.loginTokenID]) {
+    if (tokenAuthenticator(cookies, userDatabase)) {
+      templateVars.longURL = urlDatabase[cookies.loginTokenID][req.params.id];
+      req.session.urlAccessDenied = null;
+      return res.render('urls_show', templateVars);
+    }
+    res.status(401);
+    req.session.urlAccessDenied = true;
+    return res.redirect('/urls');
+  }
+});
+
+// Route for short url redirect
+app.get('/u/:id', (req, res) => {
+  let targetURL = targetRetrieverID(urlDatabase, req.params.id);
+  if (!targetURL) {
+    res.status(404);
+    res.send('Cannot find url id');
+  }
+  
+  res.redirect(targetURL);
+});
+
+// <<-------------->>
+// <<---- EDIT ---->>
+// <<-------------->>
 
 // Handling post update request from urls/:id/
 app.post('/urls/:id', (req, res) => {
@@ -158,8 +254,47 @@ app.post('/urls/:id', (req, res) => {
   }
 });
 
+
+// <<-------------->>
+// <<---- Add ----->>
+// <<-------------->>
+
+// Handling post request from urls/new
+app.post('/urls', (req, res) => {
+  // loginToken cookie values
+  const cookies = req.session;
+  // New random short urlID
+  const newkey = randomStringGen();
+
+  // Checking for login tokens -->> if not logged in
+  if (!tripleTokenCheck(cookies)) {
+    urlDatabase['generic'][newkey] = req.body.longURL;
+    return res.redirect(`/urls/${newkey}`);
+  }
+  // Checking that login tokens are all intermatching
+  if (userDatabase[cookies.loginTokenID]) {
+    if (tokenAuthenticator(cookies, userDatabase)) {
+      if (!urlDatabase[cookies.loginTokenID]) {
+        // If first time making new tinyURL, initialize object for ID
+        urlDatabase[cookies.loginTokenID] = {};
+      }
+      // Post long url and ID in object at loginTokenID
+      urlDatabase[cookies.loginTokenID][newkey] = req.body.longURL;
+      return res.redirect(`/urls/${newkey}`);
+    }
+    // If the browser/client has loginToken cookies
+    //  but they don't match any in the system
+    //  then redirect with generic
+    cookieWiper(req);
+    urlDatabase['generic'][newkey] = req.body.longURL;
+    return res.redirect('/urls');
+  }
+  // Vague edge-cases, just redirect to generic
+  urlDatabase['generic'][newkey] = req.body.longURL;
+  return res.redirect('/urls');
+});
+
 // Handling post request for /regsiter
-// POST request
 app.post('/register', (req, res) => {
   const userId = randomStringGen();
   const password = req.body.password;
@@ -239,170 +374,49 @@ app.post('/login', (req, res) => {
   return res.redirect('/urls');
 });
 
+// <<-------------->>
+// <<--- DELETE --->>
+// <<-------------->>
+
+// Handling post delete request from urls/:id/delete
+app.post('/urls/:id/delete', (req, res) => {
+  // loginToken cookie values
+  const cookies = req.session;
+  const id = req.params.id;
+  if (!urlDatabase[id]) {
+    res.status(404);
+    res.redirect('/urls');
+  }
+  if (userDatabase[cookies.loginTokenID]) {
+    if (tripleTokenCheck(cookies)) {
+      if (urlDatabase[cookies.loginTokenID][id]) {
+        delete urlDatabase[cookies.loginTokenID][id];
+        return res.redirect('/urls');
+      }
+    }
+    res.status(401);
+    cookieWiper(req);
+  }
+  /*
+  if(urlDatabase['generic'][id]) {
+    delete urlDatabase['generic'][id]
+  }
+  */
+  res.status(401);
+  res.redirect('/urls');
+});
+
 // Handling post request for /logout
 app.post('/logout', (req, res) => {
   cookieWiper(req);
   res.redirect('/login');
 });
 
-//
-// GET HANDLERS
-//
+// <<-------------->>
+// <<---- CALL ---->>
+// <<-------------->>
 
-// Route for get for root
-app.get('/', (req, res) => {
-  // Root redirects to /url regardless of tokens
-  return res.redirect("/urls");
-});
-
-// Route for get to urls json page
-app.get('/urls.json', (req, res) => {
-  // loginToken cookie values
-  const cookies = req.session;
-  // Template vars contains urlDatabase subsets:
-  // Generic and object matched with loginTokenID
-  const templateVars = {
-    generic: JSON.stringify(urlDatabase['generic']),
-    iDMatch: JSON.stringify(urlDatabase[cookies.loginTokenID]),
-  };
-  if (!tripleTokenCheck(cookies)) {
-    return res.send(templateVars.generic);
-  }
-  
-  return res.send(templateVars.iDMatch);
-});
-
-// Route for url page with table of urls IDs and long urls
-app.get('/urls', (req, res) => {
-  // loginToken cookie values
-  const cookies = req.session;
-
-  // Template vars contains urlDatabase subsets:
-  // Generic and object matched with loginTokenID
-  const templateVars = {
-    showLogin: false,
-    urls: urlDatabase['generic'],
-    cookies: cookies,
-  };
-
-  if (!tripleTokenCheck(cookies)) {
-    templateVars.showLogin = true;
-    return res.render('urls_index', templateVars);
-  }
-  if (userDatabase[cookies.loginTokenID]) {
-    if (tokenAuthenticator(cookies, userDatabase)) {
-      templateVars.urls = urlDatabase[cookies.loginTokenID];
-      res.render('urls_index', templateVars);
-    }
-    res.status(401);
-    cookieWiper(req);
-    return res.render('urls_index', templateVars);
-  }
-});
-
-// Route to page with form to post new urls
-app.get('/urls/new', (req, res) => {
-  // loginToken cookie values
-  const cookies = req.session;
-
-  const templateVars = {
-    showLogin: false,
-    cookies: cookies,
-  };
-  if (!tripleTokenCheck(cookies)) {
-    templateVars.showLogin = true;
-  }
-  res.render('urls_new', templateVars);
-});
-
-// Route to page for given id's url
-app.get('/urls/:id', (req, res) => {
-
-  // loginToken cookie values
-  const cookies = req.session;
-
-  // Template vars contains urlDatabase subsets:
-  // Generic and object matched with loginTokenID
-  const templateVars = {
-    showLogin: false,
-    id: req.params.id,
-    longURL: null,
-    cookies: cookies,
-  };
-  
-  if (!tripleTokenCheck(cookies)) {
-    const idEvaluation = targetRetrieverID(urlDatabase, req.params.id);
-    if (idEvaluation !== urlDatabase['generic'][req.params.id] || idEvaluation === false) {
-      res.status(401);
-      req.session.urlAccessDenied = true;
-      return res.redirect('/urls');
-    }
-    templateVars.showLogin = true;
-    templateVars.longURL = urlDatabase['generic'][req.params.id];
-    req.session.urlAccessDenied = null;
-    return res.render('urls_show', templateVars);
-  }
-  if (userDatabase[cookies.loginTokenID]) {
-    if (tokenAuthenticator(cookies, userDatabase)) {
-      templateVars.longURL = urlDatabase[cookies.loginTokenID][req.params.id];
-      req.session.urlAccessDenied = null;
-      return res.render('urls_show', templateVars);
-    }
-    res.status(401);
-    req.session.urlAccessDenied = true;
-    return res.redirect('/urls');
-  }
-});
-
-// Route for short url redirect
-app.get('/u/:id', (req, res) => {
-  let targetURL = targetRetrieverID(urlDatabase, req.params.id);
-  if (!targetURL) {
-    res.status(404);
-    res.send('Cannot find url id');
-  }
-  
-  res.redirect(targetURL);
-});
-
-// Route to /register page
-app.get('/register', (req, res) => {
-  // loginToken cookie values
-  const cookies = req.session;
-
-  // Template vars contains urlDatabase subsets:
-  // Generic and object matched with loginTokenID
-  const templateVars = {
-    showLogin: true,
-    urls: urlDatabase[cookies.loginTokenID],
-    cookies: cookies,
-  };
-  if (!tripleTokenCheck(cookies)) {
-    cookies.loginTokenEmail = null;
-    return res.render('urls_register', templateVars);
-  }
-  res.redirect('/urls');
-});
-
-// Route to /login page
-app.get('/login', (req, res) => {
-  // loginToken cookie values
-  const cookies = req.session;
-
-  // Template vars contains urlDatabase subsets:
-  // Generic and object matched with loginTokenID
-  const templateVars = {
-    showLogin: true,
-    cookies: cookies,
-  };
-  if (!tripleTokenCheck(cookies)) {
-    cookies.loginTokenEmail = null;
-    return res.render('urls_login', templateVars);
-  }
-  res.redirect('/urls');
-});
-
-// Setting up listener
+// Listener Setup
 app.listen(PORT, () => {
   console.log(`Express server up: listening on port ${PORT}`);
 });

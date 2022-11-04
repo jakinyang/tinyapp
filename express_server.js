@@ -225,7 +225,7 @@ app.get('/u/:id', (req, res) => {
 // <<-------------->>
 
 // Handling post update request from urls/:id/
-app.post('/urls/:id', (req, res) => {
+app.put('/urls/:id', (req, res) => {
   // loginToken cookie values
   const cookies = req.session;
   const id = req.params.id;

@@ -209,7 +209,7 @@ app.get('/u/:id', (req, res) => {
   let targetURL = targetRetrieverID(urlDatabase, req.params.id);
   if (!targetURL) {
     res.status(404);
-   return res.send('Cannot find url id');
+   return res.send('Code 404: Cannot find url id');
   }
   
   return res.redirect(targetURL);
@@ -246,9 +246,13 @@ app.post('/urls/:id', (req, res) => {
   }
   if (userDatabase[cookies.loginTokenID]) {
     if (tokenAuthenticator(cookies, userDatabase)) {
-      templateVars.longURL = urlDatabase[cookies.loginTokenID][id];
-      urlDatabase[cookies.loginTokenID][id] = longURL;
-      return res.redirect(`/urls/${id}`);
+      for (let userid in urlDatabase) {
+        if (userid === cookies.loginTokenID) {
+          templateVars.longURL = urlDatabase[cookies.loginTokenID][id];
+          urlDatabase[cookies.loginTokenID][id] = longURL;
+          return res.redirect(`/urls/${id}`);
+        }
+      }
     }
     res.status(401);
     cookieWiper(req);

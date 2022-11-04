@@ -31,7 +31,7 @@
             <td><a href="/urls/<%= id %>" ><%= id %></a></td>
             <td><a href="<%= urls[id] %>" ><%= urls[id] %></td>
             <td><form class="form-inline" method="GET" action="/urls/<%= id %>"><button type="submit" class="btn btn-outline-warning">edit</button></form></td>
-            <td><form class="form-inline" method="POST" action="/urls/<%= id %>/delete"><button type="submit" class="btn btn-outline-danger">Delete</button></form></td>
+            <td><form class="form-inline" method="POST" action="/urls/<%= id %>/delete?_method=DELETE"><button type="submit" class="btn btn-outline-danger">Delete</button></form></td>
           </tr>
         <% } %>
       </tbody>

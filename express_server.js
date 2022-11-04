@@ -393,7 +393,7 @@ app.post('/login', (req, res) => {
 // <<-------------->>
 
 // Handling post delete request from urls/:id/delete
-app.post('/urls/:id/delete', (req, res) => {
+app.delete('/urls/:id/delete', (req, res) => {
   // loginToken cookie values
   const cookies = req.session;
   const id = req.params.id;

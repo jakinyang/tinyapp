@@ -225,7 +225,7 @@ app.get('/u/:id', (req, res) => {
 // <<-------------->>
 
 // Handling post update request from urls/:id/
-app.post('/urls/:id', (req, res) => {
+app.put('/urls/:id', (req, res) => {
   // loginToken cookie values
   const cookies = req.session;
   const id = req.params.id;
@@ -393,7 +393,7 @@ app.post('/login', (req, res) => {
 // <<-------------->>
 
 // Handling post delete request from urls/:id/delete
-app.post('/urls/:id/delete', (req, res) => {
+app.delete('/urls/:id/delete', (req, res) => {
   // loginToken cookie values
   const cookies = req.session;
   const id = req.params.id;
@@ -416,7 +416,7 @@ app.post('/urls/:id/delete', (req, res) => {
 });
 
 // Handling post request for /logout
-app.post('/logout', (req, res) => {
+app.delete('/logout', (req, res) => {
   cookieWiper(req);
   res.redirect('/login');
 });

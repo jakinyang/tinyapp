@@ -7,6 +7,6 @@ const userRetrieverEmail = (database, targetEmail) => {
     }
   }
   return false;
-}
+};
 
 module.exports = { userRetrieverEmail };

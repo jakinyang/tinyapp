@@ -10,7 +10,7 @@ const userRetrieverEmail = (database, targetEmail) => {
     }
   }
   return false;
-}
+};
 
 
 
@@ -26,7 +26,7 @@ const targetRetrieverID = (database, targetId) => {
     }
   }
   return false;
-}
+};
 
 /**
  * Takes an object with ID, Email, and Password tokens; conditionally checks database to make sure both email and password in object of that ID match. Returns boolean.
@@ -39,7 +39,7 @@ const tokenAuthenticator = (tokenObject, database) => {
     return true;
   }
   return false;
-}
+};
 
 /**
  * Takes an object and checks that it has values for loginToken ID, Password, and Email. Returns boolean
@@ -49,15 +49,15 @@ const tripleTokenCheck = (tokenObject) => {
     return false;
   }
   return true;
-}
+};
 
 /**
  * Takes an object and checks that it has values for loginToken ID, Password, and Email. Returns boolean
  * */
 
 const cookieWiper = (req) => {
-    req.session = null;
-}
+  req.session = null;
+};
 
 /**
  * Returns an array of a random uppercase, lowercase, and number
@@ -97,4 +97,4 @@ const randomStringGen = () => {
   return outputArr.join('');
 };
 
-module.exports = { targetRetrieverID, userRetrieverEmail, tokenAuthenticator, tripleTokenCheck, cookieWiper, randomStringGen }
+module.exports = { targetRetrieverID, userRetrieverEmail, tokenAuthenticator, tripleTokenCheck, cookieWiper, randomStringGen };

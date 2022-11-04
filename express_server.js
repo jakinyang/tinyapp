@@ -1,7 +1,7 @@
 // Require express for server
 const express = require('express');
 // Require cookie-session
-const cookieSession = require('cookie-session')
+const cookieSession = require('cookie-session');
 // Require bcryptjs
 const bcrypt = require('bcryptjs');
 // Requiring helperModules
@@ -14,9 +14,9 @@ const app = express();
 
 const PORT = 8080;
 
-// 
+//
 // Mock Databases
-// 
+//
 
 // URL Database - Stand in for a backend database
 const urlDatabase = {
@@ -31,9 +31,9 @@ const userDatabase = {
   
 };
 
-// 
+//
 // Set up & middleware
-// 
+//
 
 // View engine that will render ejs as html
 app.set('view engine', 'ejs');
@@ -48,15 +48,15 @@ app.use(morgan('dev'));
 app.use(cookieSession({
   name: "sesh", // <<-- name of cookie in the browser
   keys: ['1a0b2c9d3e8', 'fOrTmOo2000'],
-}))
+}));
 
-// 
+//
 // Main code and request handlers
-// 
+//
 
-// 
+//
 // POST REQUESTS
-// 
+//
 
 // Handling post request from urls/new
 app.post('/urls', (req, res) => {
@@ -76,7 +76,7 @@ app.post('/urls', (req, res) => {
       if (!urlDatabase[cookies.loginTokenID]) {
         // If first time making new tinyURL, initialize object for ID
         urlDatabase[cookies.loginTokenID] = {};
-      };
+      }
       // Post long url and ID in object at loginTokenID
       urlDatabase[cookies.loginTokenID][newkey] = req.body.longURL;
       return res.redirect(`/urls/${newkey}`);
@@ -90,7 +90,7 @@ app.post('/urls', (req, res) => {
   }
   // Vague edge-cases, just redirect to generic
   urlDatabase['generic'][newkey] = req.body.longURL;
-  return res.redirect('/urls')
+  return res.redirect('/urls');
 });
 
 // Handling post delete request from urls/:id/delete
@@ -112,10 +112,10 @@ app.post('/urls/:id/delete', (req, res) => {
     res.status(401);
     cookieWiper(req);
   }
-  /* 
+  /*
   if(urlDatabase['generic'][id]) {
     delete urlDatabase['generic'][id]
-  } 
+  }
   */
   res.status(401);
   res.redirect('/urls');
@@ -128,14 +128,14 @@ app.post('/urls/:id', (req, res) => {
   const id = req.params.id;
   const longURL = req.body.longURL;
   // Template vars contains urlDatabase subsets:
-  // Generic and object matched with loginTokenID 
+  // Generic and object matched with loginTokenID
   const templateVars = {
     cookies: cookies,
     id: id,
     longURL: null,
   };
   
-  if(!longURL) {
+  if (!longURL) {
     res.status(400);
     return res.redirect(`/urls/${id}`);
   }
@@ -159,7 +159,7 @@ app.post('/urls/:id', (req, res) => {
 });
 
 // Handling post request for /regsiter
-// POST request 
+// POST request
 app.post('/register', (req, res) => {
   const userId = randomStringGen();
   const password = req.body.password;
@@ -197,7 +197,7 @@ app.post('/register', (req, res) => {
 
   // Otherwise, they're already logged in
   // Auto redirect to /urls
-  res.redirect('/urls')
+  res.redirect('/urls');
 });
 
 // Handling post request for /login
@@ -236,19 +236,18 @@ app.post('/login', (req, res) => {
   }
   // If they are logged in
   // They have all loginTokens
-  return res.redirect('/urls')
+  return res.redirect('/urls');
 });
 
 // Handling post request for /logout
 app.post('/logout', (req, res) => {
-  const cookies = req.session;
   cookieWiper(req);
   res.redirect('/login');
 });
 
-// 
+//
 // GET HANDLERS
-// 
+//
 
 // Route for get for root
 app.get('/', (req, res) => {
@@ -261,7 +260,7 @@ app.get('/urls.json', (req, res) => {
   // loginToken cookie values
   const cookies = req.session;
   // Template vars contains urlDatabase subsets:
-  // Generic and object matched with loginTokenID 
+  // Generic and object matched with loginTokenID
   const templateVars = {
     generic: JSON.stringify(urlDatabase['generic']),
     iDMatch: JSON.stringify(urlDatabase[cookies.loginTokenID]),
@@ -279,7 +278,7 @@ app.get('/urls', (req, res) => {
   const cookies = req.session;
 
   // Template vars contains urlDatabase subsets:
-  // Generic and object matched with loginTokenID 
+  // Generic and object matched with loginTokenID
   const templateVars = {
     showLogin: false,
     urls: urlDatabase['generic'],
@@ -323,11 +322,11 @@ app.get('/urls/:id', (req, res) => {
   const cookies = req.session;
 
   // Template vars contains urlDatabase subsets:
-  // Generic and object matched with loginTokenID 
+  // Generic and object matched with loginTokenID
   const templateVars = {
     showLogin: false,
-    id: req.params.id, 
-    longURL: null, 
+    id: req.params.id,
+    longURL: null,
     cookies: cookies,
   };
   
@@ -336,7 +335,7 @@ app.get('/urls/:id', (req, res) => {
     if (idEvaluation !== urlDatabase['generic'][req.params.id] || idEvaluation === false) {
       res.status(401);
       req.session.urlAccessDenied = true;
-      return res.redirect('/urls')
+      return res.redirect('/urls');
     }
     templateVars.showLogin = true;
     templateVars.longURL = urlDatabase['generic'][req.params.id];
@@ -351,14 +350,14 @@ app.get('/urls/:id', (req, res) => {
     }
     res.status(401);
     req.session.urlAccessDenied = true;
-    return res.redirect('/urls')
+    return res.redirect('/urls');
   }
 });
 
 // Route for short url redirect
 app.get('/u/:id', (req, res) => {
   let targetURL = targetRetrieverID(urlDatabase, req.params.id);
-  if(!targetURL) {
+  if (!targetURL) {
     res.status(404);
     res.send('Cannot find url id');
   }
@@ -372,7 +371,7 @@ app.get('/register', (req, res) => {
   const cookies = req.session;
 
   // Template vars contains urlDatabase subsets:
-  // Generic and object matched with loginTokenID 
+  // Generic and object matched with loginTokenID
   const templateVars = {
     showLogin: true,
     urls: urlDatabase[cookies.loginTokenID],
@@ -382,7 +381,7 @@ app.get('/register', (req, res) => {
     cookies.loginTokenEmail = null;
     return res.render('urls_register', templateVars);
   }
-  res.redirect('/urls')
+  res.redirect('/urls');
 });
 
 // Route to /login page
@@ -391,7 +390,7 @@ app.get('/login', (req, res) => {
   const cookies = req.session;
 
   // Template vars contains urlDatabase subsets:
-  // Generic and object matched with loginTokenID 
+  // Generic and object matched with loginTokenID
   const templateVars = {
     showLogin: true,
     cookies: cookies,

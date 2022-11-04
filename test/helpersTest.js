@@ -16,8 +16,13 @@ const testUsers = {
 
 describe('#userRetrieverEmail', () => {
   it('should return the user object with matching target email', () => {
-    const user = userRetrieverEmail(testUsers, 'user@example.com');
-    const expectedUserID = 'userRandomID';
-    assert.equal(user, expectedUserID);
+    const actualOutput = userRetrieverEmail(testUsers, 'user@example.com');
+    const expectedOutput = 'userRandomID';
+    assert.equal(actualOutput, expectedOutput);
+  })
+  it('should return false if no object has matching target email', () => {
+    const actualOutput = userRetrieverEmail(testUsers, 'user@pitvipers.com');
+    const expectedOutput = false;
+    assert.equal(actualOutput, expectedOutput);
   })
 })

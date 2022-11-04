@@ -1,5 +1,7 @@
 // Require express for server
 const express = require('express');
+// Require methodOverride
+const methodOverride = require('method-override');
 // Require cookie-session
 const cookieSession = require('cookie-session');
 // Require bcryptjs
@@ -47,6 +49,9 @@ app.use(cookieSession({
   name: "sesh", // <<-- name of cookie in the browser
   keys: ['1a0b2c9d3e8', 'fOrTmOo2000'],
 }));
+
+// Method-override
+app.use(methodOverride('_method'));
 
 // <<-------------------------------->>
 // <<- MAIN CODE + REQUEST HANDLERS ->>

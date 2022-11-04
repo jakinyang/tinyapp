@@ -77,11 +77,24 @@ app.get('/urls.json', (req, res) => {
     generic: JSON.stringify(urlDatabase['generic']),
     iDMatch: JSON.stringify(urlDatabase[cookies.loginTokenID]),
   };
+  // If all loginToken cookies don't match 
+  // Display generic urls
   if (!tripleTokenCheck(cookies)) {
     return res.send(templateVars.generic);
   }
   
-  return res.send(templateVars.iDMatch);
+  // Otherwise, if loginTokens present, display
+  // urls for that id
+  if (userDatabase[cookies.loginTokenID]) {
+    if (tokenAuthenticator(cookies, userDatabase)) {
+      return res.send(templateVars.iDMatch);
+    }
+    // If login tokens don't match, redirect to login
+    // Wipe cookies
+    res.status(401);
+    cookieWiper(req);
+    return res.redirect('/login');
+  }
 });
 
 // Route for url page with table of urls IDs and long urls
@@ -97,18 +110,23 @@ app.get('/urls', (req, res) => {
     cookies: cookies,
   };
 
+  // If login tokens not present, redirect to /login
   if (!tripleTokenCheck(cookies)) {
     templateVars.showLogin = true;
     res.redirect('/login');
   }
+  // If login tokens present
   if (userDatabase[cookies.loginTokenID]) {
+    // Validate if tokens match
     if (tokenAuthenticator(cookies, userDatabase)) {
+      // If validated, display urls for that id
       templateVars.urls = urlDatabase[cookies.loginTokenID];
       return res.render('urls_index', templateVars);
     }
+    // If validation fails, wipe cookies, redirect to /login
     res.status(401);
     cookieWiper(req);
-    return res.render('urls_index', templateVars);
+    return res.redirect('/login');
   }
 });
 
@@ -121,10 +139,12 @@ app.get('/urls/new', (req, res) => {
     showLogin: false,
     cookies: cookies,
   };
+  // Check for login tokens
   if (!tripleTokenCheck(cookies)) {
     templateVars.showLogin = true;
     return res.redirect('/login');
   }
+
   return res.render('urls_new', templateVars);
 });
 
@@ -140,10 +160,12 @@ app.get('/register', (req, res) => {
     urls: urlDatabase[cookies.loginTokenID],
     cookies: cookies,
   };
+  // Check for login tokens
   if (!tripleTokenCheck(cookies)) {
     cookies.loginTokenEmail = null;
     return res.render('urls_register', templateVars);
   }
+  // If login tokens already present, redirecdt to /urls
   return res.redirect('/urls');
 });
 
@@ -184,24 +206,33 @@ app.get('/urls/:id', (req, res) => {
     cookies: cookies,
   };
   
+  // Check for login tokens
   if (!tripleTokenCheck(cookies)) {
+    // checking if the id is present in the database
     const idEvaluation = targetRetrieverID(urlDatabase, req.params.id);
+    // If url id is present but not associated with current
+    // Login tokens
     if (idEvaluation !== urlDatabase['generic'][req.params.id] || idEvaluation === false) {
+      // Return appropriate status
       res.status(401);
       req.session.urlAccessDenied = true;
       return res.redirect('/urls');
     }
+    // Otherwise, show url if it is a generic url
     templateVars.showLogin = true;
     templateVars.longURL = urlDatabase['generic'][req.params.id];
     req.session.urlAccessDenied = null;
     return res.render('urls_show', templateVars);
   }
+  // If user is logged in, authenticate all login tokens
   if (userDatabase[cookies.loginTokenID]) {
     if (tokenAuthenticator(cookies, userDatabase)) {
+      // If tokens match, display url for that id
       templateVars.longURL = urlDatabase[cookies.loginTokenID][req.params.id];
       req.session.urlAccessDenied = null;
       return res.render('urls_show', templateVars);
     }
+    // If tokens don't match, display error and redirect
     res.status(401);
     req.session.urlAccessDenied = true;
     return res.redirect('/urls');
@@ -210,7 +241,9 @@ app.get('/urls/:id', (req, res) => {
 
 // Route for short url redirect
 app.get('/u/:id', (req, res) => {
+  // If url id exists, redirect
   let targetURL = targetRetrieverID(urlDatabase, req.params.id);
+  // If url id doesn't exist, send 404 code
   if (!targetURL) {
     res.status(404);
     return res.send('Code 404: Cannot find url id');
@@ -237,17 +270,24 @@ app.put('/urls/:id', (req, res) => {
     longURL: null,
   };
   
+  // If the no input is given to the edit form field
+  // Redirect to current page
   if (!longURL) {
     res.status(400);
     return res.redirect(`/urls/${id}`);
   }
 
+  // If no login tokens, redirect to /login
+  // Send 401 code
   if (!tripleTokenCheck(cookies)) {
     res.status(401);
-    return res.redirect(`/urls/${id}`);
+    return res.redirect('/login');
   }
+
+  // If login tokens, validate
   if (userDatabase[cookies.loginTokenID]) {
     if (tokenAuthenticator(cookies, userDatabase)) {
+      // If tokens validate, update url id with new longURL
       for (let userid in urlDatabase) {
         if (userid === cookies.loginTokenID) {
           templateVars.longURL = urlDatabase[cookies.loginTokenID][id];
@@ -256,6 +296,8 @@ app.put('/urls/:id', (req, res) => {
         }
       }
     }
+    // If authentication fails, redirect to current page
+    // Wipe cookies => auto redirect to /login
     res.status(401);
     cookieWiper(req);
     return res.redirect(`/urls/${id}`);
@@ -356,6 +398,7 @@ app.post('/login', (req, res) => {
     for (let id in userDatabase) {
       // Check for matching email and password pairs at given id
       if (userDatabase[id]['email'] === email && bcrypt.compareSync(password, userDatabase[id]['password'])) {
+        // Assign values in database to login tokens
         req.session.loginTokenID =  id;
         req.session.loginTokenEmail = email;
         req.session.loginTokenPass = userDatabase[id]['password'];
@@ -392,16 +435,21 @@ app.delete('/urls/:id/delete', (req, res) => {
   // loginToken cookie values
   const cookies = req.session;
   const id = req.params.id;
+  // Validate login tokens
   if (userDatabase[cookies.loginTokenID]) {
     if (tripleTokenCheck(cookies)) {
+      // Validate if the url deleted is associated with id
       if (urlDatabase[cookies.loginTokenID][id]) {
         delete urlDatabase[cookies.loginTokenID][id];
         return res.redirect('/urls');
       }
     }
+    // If validation fails, send code 401, wipe cookies
     res.status(401);
     cookieWiper(req);
   }
+  // If url is not associated with an id, but is generic
+  // Send code 404 and redirect
   if (urlDatabase['generic'][id]) {
     res.status(404);
     return res.redirect('/urls');

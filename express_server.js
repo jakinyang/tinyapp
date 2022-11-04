@@ -99,7 +99,7 @@ app.get('/urls', (req, res) => {
   if (userDatabase[cookies.loginTokenID]) {
     if (tokenAuthenticator(cookies, userDatabase)) {
       templateVars.urls = urlDatabase[cookies.loginTokenID];
-      res.render('urls_index', templateVars);
+      return res.render('urls_index', templateVars);
     }
     res.status(401);
     cookieWiper(req);
@@ -119,7 +119,7 @@ app.get('/urls/new', (req, res) => {
   if (!tripleTokenCheck(cookies)) {
     templateVars.showLogin = true;
   }
-  res.render('urls_new', templateVars);
+  return res.render('urls_new', templateVars);
 });
 
 // Route to /register page
@@ -138,7 +138,7 @@ app.get('/register', (req, res) => {
     cookies.loginTokenEmail = null;
     return res.render('urls_register', templateVars);
   }
-  res.redirect('/urls');
+  return res.redirect('/urls');
 });
 
 // Route to /login page
@@ -156,7 +156,7 @@ app.get('/login', (req, res) => {
     cookies.loginTokenEmail = null;
     return res.render('urls_login', templateVars);
   }
-  res.redirect('/urls');
+  return res.redirect('/urls');
 });
 
 // <<-------------->>
@@ -207,10 +207,10 @@ app.get('/u/:id', (req, res) => {
   let targetURL = targetRetrieverID(urlDatabase, req.params.id);
   if (!targetURL) {
     res.status(404);
-    res.send('Cannot find url id');
+   return res.send('Cannot find url id');
   }
   
-  res.redirect(targetURL);
+  return res.redirect(targetURL);
 });
 
 // <<-------------->>
@@ -383,10 +383,6 @@ app.post('/urls/:id/delete', (req, res) => {
   // loginToken cookie values
   const cookies = req.session;
   const id = req.params.id;
-  if (!urlDatabase[id]) {
-    res.status(404);
-    res.redirect('/urls');
-  }
   if (userDatabase[cookies.loginTokenID]) {
     if (tripleTokenCheck(cookies)) {
       if (urlDatabase[cookies.loginTokenID][id]) {
@@ -397,13 +393,12 @@ app.post('/urls/:id/delete', (req, res) => {
     res.status(401);
     cookieWiper(req);
   }
-  /*
-  if(urlDatabase['generic'][id]) {
-    delete urlDatabase['generic'][id]
+  if (urlDatabase['generic'][id]) {
+    res.status(404);
+    return res.redirect('/urls');
   }
-  */
   res.status(401);
-  res.redirect('/urls');
+  return res.redirect('/urls');
 });
 
 // Handling post request for /logout

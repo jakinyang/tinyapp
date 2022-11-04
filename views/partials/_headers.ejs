@@ -25,7 +25,7 @@
         <h6>Signed in as: <%= cookies.loginTokenEmail %></h6>
       </div>
       <div class="col">
-        <form class="form-inline" action="/logout" method="POST">
+        <form class="form-inline" action="/logout?_method=DELETE" method="POST">
           <button type="submit" class="btn btn-light">
             Log Out
           </button>

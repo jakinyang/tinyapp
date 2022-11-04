@@ -416,7 +416,7 @@ app.post('/urls/:id/delete', (req, res) => {
 });
 
 // Handling post request for /logout
-app.post('/logout', (req, res) => {
+app.delete('/logout', (req, res) => {
   cookieWiper(req);
   res.redirect('/login');
 });

@@ -77,7 +77,7 @@ app.get('/urls.json', (req, res) => {
     generic: JSON.stringify(urlDatabase['generic']),
     iDMatch: JSON.stringify(urlDatabase[cookies.loginTokenID]),
   };
-  // If all loginToken cookies don't match 
+  // If all loginToken cookies don't match
   // Display generic urls
   if (!tripleTokenCheck(cookies)) {
     return res.send(templateVars.generic);

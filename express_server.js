@@ -5,7 +5,7 @@ const cookieSession = require('cookie-session')
 // Require bcryptjs
 const bcrypt = require('bcryptjs');
 // Requiring helperModules
-const { targetRetrieverID, userRetrieverEmail, tokenAuthenticator, tripleTokenCheck, cookieWiper, randomStringGen } = require('./helperModules');
+const { targetRetrieverID, tokenAuthenticator, tripleTokenCheck, cookieWiper, randomStringGen } = require('./helperModules');
 // Require morgan
 const morgan = require('morgan');
 // Requiring cookieParser

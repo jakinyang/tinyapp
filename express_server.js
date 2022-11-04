@@ -214,7 +214,7 @@ app.get('/u/:id', (req, res) => {
   let targetURL = targetRetrieverID(urlDatabase, req.params.id);
   if (!targetURL) {
     res.status(404);
-   return res.send('Code 404: Cannot find url id');
+    return res.send('Code 404: Cannot find url id');
   }
   
   return res.redirect(targetURL);
@@ -281,8 +281,8 @@ app.post('/urls', (req, res) => {
   if (!tripleTokenCheck(cookies)) {
     /* urlDatabase['generic'][newkey] = req.body.longURL;
     return res.redirect(`/urls/${newkey}`); */
-    res.status(401)
-    res.send("Permission Denied")
+    res.status(401);
+    res.send("Permission Denied");
     return res.redirect('/login');
   }
   // Checking that login tokens are all intermatching

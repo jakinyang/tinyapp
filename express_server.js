@@ -1,5 +1,7 @@
 // Require express for server
 const express = require('express');
+// Require method-override
+const methodOverride = require('method-override');
 // Require cookie-session
 const cookieSession = require('cookie-session');
 // Require bcryptjs
@@ -38,6 +40,9 @@ app.set('view engine', 'ejs');
 
 // Middleware to take in form POST and encode as url
 app.use(express.urlencoded({ extended: true}));
+
+// Method-override
+app.use(methodOverride('_method'));
 
 // Morgan for terminal logging
 app.use(morgan('dev'));

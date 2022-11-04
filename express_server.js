@@ -118,6 +118,7 @@ app.get('/urls/new', (req, res) => {
   };
   if (!tripleTokenCheck(cookies)) {
     templateVars.showLogin = true;
+    return res.redirect('/login');
   }
   return res.render('urls_new', templateVars);
 });
@@ -268,8 +269,11 @@ app.post('/urls', (req, res) => {
 
   // Checking for login tokens -->> if not logged in
   if (!tripleTokenCheck(cookies)) {
-    urlDatabase['generic'][newkey] = req.body.longURL;
-    return res.redirect(`/urls/${newkey}`);
+    /* urlDatabase['generic'][newkey] = req.body.longURL;
+    return res.redirect(`/urls/${newkey}`); */
+    res.status(401)
+    res.send("Permission Denied")
+    return res.redirect('/login');
   }
   // Checking that login tokens are all intermatching
   if (userDatabase[cookies.loginTokenID]) {

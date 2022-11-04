@@ -94,7 +94,8 @@ app.get('/urls', (req, res) => {
 
   if (!tripleTokenCheck(cookies)) {
     templateVars.showLogin = true;
-    return res.render('urls_index', templateVars);
+    /* return res.render('urls_index', templateVars); */
+    res.redirect('/login');
   }
   if (userDatabase[cookies.loginTokenID]) {
     if (tokenAuthenticator(cookies, userDatabase)) {

@@ -39,9 +39,46 @@ const tripleTokenCheck = (tokenObject) => {
  * Takes an object and checks that it has values for loginToken ID, Password, and Email. Returns boolean
  * */
 
-const cookieWiper = (cookiesObject, res) => {
-  for (cookie in cookiesObject) {
-    res.clearCookie(cookie);
-  }
+const cookieWiper = (req) => {
+    req.session = null;
 }
-module.exports = { databaseIterator, tokenAuthenticator, tripleTokenCheck, cookieWiper }
+
+/**
+ * Returns an array of a random uppercase, lowercase, and number
+ * */
+const randomAlphaNumGen = () => {
+  // Generate lowerCase char
+  let lowerCharCode = Math.floor(Math.random() * 19) + 97;
+  let lowerChar = String.fromCharCode(lowerCharCode);
+  // Generate upperCase char
+  let upperCharCode = Math.floor(Math.random() * 19) + 65;
+  let upperChar = String.fromCharCode(upperCharCode);
+  // Generate number
+  let randomNum = Math.floor(Math.random() * 10);
+  return [lowerChar, upperChar, randomNum];
+};
+
+/**
+ * Generates a random number up to 18 to be used as an index.
+ * */
+const randomIndexGen = () => {
+  return Math.floor(Math.random() * 18);
+};
+
+
+/**
+ * Calls randomAlphaNumGen and randomIndexGen and returns a 6 char long alphanumeric string
+ * */
+const randomStringGen = () => {
+  let alphaNumArr = [];
+  let outputArr = [];
+  for (let i = 0; i < 6; i++) {
+    alphaNumArr = alphaNumArr.concat(randomAlphaNumGen());
+  }
+  for (let j = 0; j < 6; j++) {
+    outputArr.push(alphaNumArr[randomIndexGen()]);
+  }
+  return outputArr.join('');
+};
+
+module.exports = { databaseIterator, tokenAuthenticator, tripleTokenCheck, cookieWiper, randomStringGen }

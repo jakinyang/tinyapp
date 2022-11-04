@@ -99,7 +99,6 @@ app.get('/urls', (req, res) => {
 
   if (!tripleTokenCheck(cookies)) {
     templateVars.showLogin = true;
-    /* return res.render('urls_index', templateVars); */
     res.redirect('/login');
   }
   if (userDatabase[cookies.loginTokenID]) {
@@ -244,8 +243,6 @@ app.put('/urls/:id', (req, res) => {
   }
 
   if (!tripleTokenCheck(cookies)) {
-    /* templateVars.longURL = urlDatabase['generic'][id];
-    urlDatabase['generic'][id] = longURL; */
     res.status(401);
     return res.redirect(`/urls/${id}`);
   }
@@ -279,8 +276,6 @@ app.post('/urls', (req, res) => {
 
   // Checking for login tokens -->> if not logged in
   if (!tripleTokenCheck(cookies)) {
-    /* urlDatabase['generic'][newkey] = req.body.longURL;
-    return res.redirect(`/urls/${newkey}`); */
     res.status(401);
     res.send("Permission Denied");
     return res.redirect('/login');

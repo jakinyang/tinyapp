@@ -353,22 +353,18 @@ app.post('/register', (req, res) => {
   res.redirect('/urls');
 });
 
-// Handling post request for /login
 app.post('/login', (req, res) => {
   const password = req.body.password;
   const email = req.body.email;
   const cookies = req.session;
-  // If they are not logged in
-  // They don't have incomplete or no login tokens
+  // Check for login cookies
   if (!tripleTokenCheck(cookies)) {
-    // Cycle through database
     for (let id in userDatabase) {
-      // Check for matching email and password pairs at given id
+      // Check for matching email and password for id
       if (userDatabase[id]['email'] === email && bcrypt.compareSync(password, userDatabase[id]['password'])) {
         // Assign values in database to login tokens
         req.session.loginTokenID =  id;
         req.session.loginTokenEmail = email;
-        req.session.loginTokenPass = userDatabase[id]['password'];
         // If successful, clear any bad marker cookies
         if (req.session.badLogin) {
           req.session.badLogin = null;

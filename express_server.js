@@ -67,36 +67,6 @@ app.get('/', (req, res) => {
   return res.redirect("/urls");
 });
 
-// Route for get to urls json page
-app.get('/urls.json', (req, res) => {
-  // loginToken cookie values
-  const cookies = req.session;
-  // Template vars contains urlDatabase subsets:
-  // Generic and object matched with loginTokenID
-  const templateVars = {
-    generic: JSON.stringify(urlDatabase['generic']),
-    iDMatch: JSON.stringify(urlDatabase[cookies.loginTokenID]),
-  };
-  // If all loginToken cookies don't match
-  // Display generic urls
-  if (!tripleTokenCheck(cookies)) {
-    return res.send(templateVars.generic);
-  }
-  
-  // Otherwise, if loginTokens present, display
-  // urls for that id
-  if (userDatabase[cookies.loginTokenID]) {
-    if (tokenAuthenticator(cookies, userDatabase)) {
-      return res.send(templateVars.iDMatch);
-    }
-    // If login tokens don't match, redirect to login
-    // Wipe cookies
-    res.status(401);
-    cookieWiper(req);
-    return res.redirect('/login');
-  }
-});
-
 // Route for url page with table of urls IDs and long urls
 app.get('/urls', (req, res) => {
   // loginToken cookie values

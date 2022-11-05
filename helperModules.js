@@ -29,7 +29,7 @@ const targetRetrieverID = (database, targetId) => {
 };
 
 /**
- * Takes an object with ID key/value. It then checks database to make sure the id matches. Returns boolean.
+ * Takes an object with ID key/value and a database (object). It then checks database to make sure the id matches. Returns boolean.
  * */
 const tokenAuthenticator = (tokenObject, database) => {
   const id = tokenObject.loginTokenID;

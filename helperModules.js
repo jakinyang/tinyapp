@@ -33,7 +33,8 @@ const targetRetrieverID = (database, targetId) => {
  * */
 const tokenAuthenticator = (tokenObject, database) => {
   const id = tokenObject.loginTokenID;
-  if (id === database[id]['userId']) {
+  const email = tokenObject.loginTokenEmail;
+  if (id === database[id]['userId'] && email === database[id]['email']) {
     return true;
   }
   return false;

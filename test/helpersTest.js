@@ -1,5 +1,5 @@
 const { assert } = require('chai');
-const { userRetrieverEmail } = require('../helpers');
+const { userRetrieverEmail } = require('../helperModules');
 
 const testUsers = {
   "userRandomID": {

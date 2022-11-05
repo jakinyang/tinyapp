@@ -35,22 +35,17 @@ const userDatabase = {};
 // <<- Set up & middleware ->>
 // <<----------------------->>
 
-// View engine that will render ejs as html
 app.set('view engine', 'ejs');
 
-// Middleware to take in form POST and encode as url
 app.use(express.urlencoded({ extended: true}));
 
-// Morgan for terminal logging
 app.use(morgan('dev'));
 
-// Middleware to handle cookies
 app.use(cookieSession({
-  name: "sesh", // <<-- name of cookie in the browser
+  name: "sesh",
   keys: ['1a0b2c9d3e8', 'fOrTmOo2000'],
 }));
 
-// Method-override
 app.use(methodOverride('_method'));
 
 // <<-------------------------------->>
@@ -61,10 +56,12 @@ app.use(methodOverride('_method'));
 // <<--- BROWSE --->>
 // <<-------------->>
 
-// Route for get for root
 app.get('/', (req, res) => {
-  // Root redirects to /url regardless of tokens
-  return res.redirect("/urls");
+  const cookies = req.session;
+  if (!tripleTokenCheck(cookies)) {
+    return res.redirect("/login");
+  }
+  return res.reditect("/urls");
 });
 
 // Route for url page with table of urls IDs and long urls

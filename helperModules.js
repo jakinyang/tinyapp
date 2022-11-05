@@ -1,5 +1,5 @@
 /**
- * Iterates over nested objects and returns the nested object with email that matches targetEmail. If no match, returns false
+ * Takes a database (object) and a target string as parameters. Iterates over nested objects and returns the nested object with email that matches target email string. If no match, returns false
  * */
 const userRetrieverEmail = (database, targetEmail) => {
   for (let subDatabase in database) {
@@ -15,7 +15,7 @@ const userRetrieverEmail = (database, targetEmail) => {
 
 
 /**
- * Iterates over nested objects and returns the nested object with key that matches targetId. If no match, returns false
+ * Takes a database (object) and a target string as parameters.Iterates over nested objects and returns the nested object with key that matches targetId. If no match, returns false
  * */
 const targetRetrieverID = (database, targetId) => {
   for (let subDatabase in database) {
@@ -29,23 +29,21 @@ const targetRetrieverID = (database, targetId) => {
 };
 
 /**
- * Takes an object with ID, Email, and Password tokens; conditionally checks database to make sure both email and password in object of that ID match. Returns boolean.
+ * Takes an object with ID key/value. It then checks database to make sure the id matches. Returns boolean.
  * */
 const tokenAuthenticator = (tokenObject, database) => {
   const id = tokenObject.loginTokenID;
-  const email = tokenObject.loginTokenEmail;
-  const password = tokenObject.loginTokenPass;
-  if (email === database[id]['email'] && password === database[id]['password'] && id === database[id]['userId']) {
+  if (id === database[id]['userId']) {
     return true;
   }
   return false;
 };
 
 /**
- * Takes an object and checks that it has values for loginToken ID, Password, and Email. Returns boolean
+ * Takes an object and checks that it has values for loginToken ID. Returns true if found, false if not.
  * */
 const tripleTokenCheck = (tokenObject) => {
-  if (!tokenObject.loginTokenID || !tokenObject.loginTokenPass || !tokenObject.loginTokenEmail) {
+  if (!tokenObject.loginTokenID) {
     return false;
   }
   return true;
@@ -54,7 +52,6 @@ const tripleTokenCheck = (tokenObject) => {
 /**
  * Takes an object and checks that it has values for loginToken ID, Password, and Email. Returns boolean
  * */
-
 const cookieWiper = (req) => {
   req.session = null;
 };

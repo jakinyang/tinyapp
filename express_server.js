@@ -80,7 +80,7 @@ app.get('/urls', (req, res) => {
   // If login tokens not present, redirect to /login
   if (!tripleTokenCheck(cookies)) {
     templateVars.showLogin = true;
-    res.redirect('/login');
+    res.render('error_loginPrompt', templateVars);
   }
   // If login tokens present
   if (userDatabase[cookies.loginTokenID]) {

@@ -43,7 +43,7 @@ const tokenAuthenticator = (tokenObject, database) => {
 /**
  * Takes an object and checks that it has values for loginToken ID. Returns true if found, false if not.
  * */
-const tripleTokenCheck = (tokenObject) => {
+const loginCookieCheck = (tokenObject) => {
   if (!tokenObject.loginTokenID) {
     return false;
   }
@@ -95,4 +95,4 @@ const randomStringGen = () => {
   return outputArr.join('');
 };
 
-module.exports = { targetRetrieverID, userRetrieverEmail, tokenAuthenticator, tripleTokenCheck, cookieWiper, randomStringGen };
+module.exports = { targetRetrieverID, userRetrieverEmail, tokenAuthenticator, loginCookieCheck, cookieWiper, randomStringGen };

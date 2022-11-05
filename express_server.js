@@ -7,7 +7,7 @@ const cookieSession = require('cookie-session');
 // Require bcryptjs
 const bcrypt = require('bcryptjs');
 // Requiring helperModules
-const { targetRetrieverID, tokenAuthenticator, tripleTokenCheck, cookieWiper, randomStringGen } = require('./helperModules');
+const { targetRetrieverID, tokenAuthenticator, loginCookieCheck, cookieWiper, randomStringGen } = require('./helperModules');
 // Require morgan
 const morgan = require('morgan');
 // Requiring cookieParser
@@ -56,37 +56,35 @@ app.use(methodOverride('_method'));
 // <<--- BROWSE --->>
 // <<-------------->>
 
+// Get handler for '/' checks for login state
+// redirects to /login or /urls
 app.get('/', (req, res) => {
   const cookies = req.session;
-  if (!tripleTokenCheck(cookies)) {
+  if (!loginCookieCheck(cookies)) {
     return res.redirect("/login");
   }
   return res.reditect("/urls");
 });
 
-// Route for url page with table of urls IDs and long urls
-app.get('/urls', (req, res) => {
-  // loginToken cookie values
-  const cookies = req.session;
 
-  // Template vars contains urlDatabase subsets:
-  // Generic and object matched with loginTokenID
+app.get('/urls', (req, res) => {
+  const cookies = req.session;
   const templateVars = {
     showLogin: false,
     urls: urlDatabase['generic'],
     cookies: cookies,
   };
 
-  // If login tokens not present, redirect to /login
-  if (!tripleTokenCheck(cookies)) {
+  // If client is not logged in, render error w/ login prompt
+  if (!loginCookieCheck(cookies)) {
     templateVars.showLogin = true;
     res.render('error_loginPrompt', templateVars);
   }
-  // If login tokens present
+
+  // If client is logged in render urls_index with urls
+  // Associated with that client's id
   if (userDatabase[cookies.loginTokenID]) {
-    // Validate if tokens match
     if (tokenAuthenticator(cookies, userDatabase)) {
-      // If validated, display urls for that id
       templateVars.urls = urlDatabase[cookies.loginTokenID];
       return res.render('urls_index', templateVars);
     }
@@ -107,7 +105,7 @@ app.get('/urls/new', (req, res) => {
     cookies: cookies,
   };
   // Check for login tokens
-  if (!tripleTokenCheck(cookies)) {
+  if (!loginCookieCheck(cookies)) {
     templateVars.showLogin = true;
     return res.redirect('/login');
   }
@@ -128,7 +126,7 @@ app.get('/register', (req, res) => {
     cookies: cookies,
   };
   // Check for login tokens
-  if (!tripleTokenCheck(cookies)) {
+  if (!loginCookieCheck(cookies)) {
     cookies.loginTokenEmail = null;
     return res.render('urls_register', templateVars);
   }
@@ -147,7 +145,7 @@ app.get('/login', (req, res) => {
     showLogin: true,
     cookies: cookies,
   };
-  if (!tripleTokenCheck(cookies)) {
+  if (!loginCookieCheck(cookies)) {
     cookies.loginTokenEmail = null;
     return res.render('urls_login', templateVars);
   }
@@ -174,7 +172,7 @@ app.get('/urls/:id', (req, res) => {
   };
   
   // Check for login tokens
-  if (!tripleTokenCheck(cookies)) {
+  if (!loginCookieCheck(cookies)) {
     // checking if the id is present in the database
     const idEvaluation = targetRetrieverID(urlDatabase, req.params.id);
     // If url id is present but not associated with current
@@ -246,7 +244,7 @@ app.put('/urls/:id', (req, res) => {
 
   // If no login tokens, redirect to /login
   // Send 401 code
-  if (!tripleTokenCheck(cookies)) {
+  if (!loginCookieCheck(cookies)) {
     res.status(401);
     return res.redirect('/login');
   }
@@ -284,7 +282,7 @@ app.post('/urls', (req, res) => {
   const newkey = randomStringGen();
 
   // Checking for login tokens -->> if not logged in
-  if (!tripleTokenCheck(cookies)) {
+  if (!loginCookieCheck(cookies)) {
     res.status(401);
     res.send("Permission Denied");
     return res.redirect('/login');
@@ -337,7 +335,7 @@ app.post('/register', (req, res) => {
 
   // If they are not already logged in
   // And the request body email and password are valid
-  if (!tripleTokenCheck(cookies)) {
+  if (!loginCookieCheck(cookies)) {
     req.session.badRegister = null;
     req.session.duplicateRegister = null;
     userDatabase[userId] = {
@@ -358,7 +356,7 @@ app.post('/login', (req, res) => {
   const email = req.body.email;
   const cookies = req.session;
   // Check for login cookies
-  if (!tripleTokenCheck(cookies)) {
+  if (!loginCookieCheck(cookies)) {
     for (let id in userDatabase) {
       // Check for matching email and password for id
       if (userDatabase[id]['email'] === email && bcrypt.compareSync(password, userDatabase[id]['password'])) {
@@ -400,7 +398,7 @@ app.delete('/urls/:id/delete', (req, res) => {
   const id = req.params.id;
   // Validate login tokens
   if (userDatabase[cookies.loginTokenID]) {
-    if (tripleTokenCheck(cookies)) {
+    if (loginCookieCheck(cookies)) {
       // Validate if the url deleted is associated with id
       if (urlDatabase[cookies.loginTokenID][id]) {
         delete urlDatabase[cookies.loginTokenID][id];

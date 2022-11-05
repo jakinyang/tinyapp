@@ -20,11 +20,11 @@
     </div>
     <% if (cookies.loginTokenEmail) { %>
       <!-- Form A -->
-    <div class="form-group row">
-      <div class="col">
-        <h6>Signed in as: <%= cookies.loginTokenEmail %></h6>
+    <div class="d-flex justify-content-center">
+      <div class="p-2">
+        <h5 class="text-light">Signed in as: <%= cookies.loginTokenEmail %></h5>
       </div>
-      <div class="col">
+      <div class="p-2">
         <form class="form-inline" action="/logout?_method=DELETE" method="POST">
           <button type="submit" class="btn btn-light">
             Log Out

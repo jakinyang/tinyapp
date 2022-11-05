@@ -78,6 +78,7 @@ app.get('/urls', (req, res) => {
   // If client is not logged in, render error w/ login prompt
   if (!loginCookieCheck(cookies)) {
     templateVars.showLogin = true;
+    res.status(401);
     res.render('error_loginPrompt', templateVars);
   }
 
@@ -89,23 +90,21 @@ app.get('/urls', (req, res) => {
       return res.render('urls_index', templateVars);
     }
     // If validation fails, wipe cookies, redirect to /login
-    res.status(401);
+    res.status(400);
     cookieWiper(req);
     return res.redirect('/login');
   }
 });
 
-// Route to page with form to post new urls
 app.get('/urls/new', (req, res) => {
-  // loginToken cookie values
   const cookies = req.session;
-
   const templateVars = {
     showLogin: false,
     cookies: cookies,
   };
-  // Check for login tokens
+  // Redirect to login if not logged in
   if (!loginCookieCheck(cookies)) {
+    res.status(401);
     templateVars.showLogin = true;
     return res.redirect('/login');
   }
@@ -125,7 +124,7 @@ app.get('/register', (req, res) => {
     urls: urlDatabase[cookies.loginTokenID],
     cookies: cookies,
   };
-  // Check for login tokens
+  // If client is not logged in redirect to /login
   if (!loginCookieCheck(cookies)) {
     cookies.loginTokenEmail = null;
     return res.render('urls_register', templateVars);
@@ -158,12 +157,7 @@ app.get('/login', (req, res) => {
 
 // Route to page for given id's url
 app.get('/urls/:id', (req, res) => {
-
-  // loginToken cookie values
   const cookies = req.session;
-
-  // Template vars contains urlDatabase subsets:
-  // Generic and object matched with loginTokenID
   const templateVars = {
     showLogin: false,
     id: req.params.id,
@@ -173,21 +167,9 @@ app.get('/urls/:id', (req, res) => {
   
   // Check for login tokens
   if (!loginCookieCheck(cookies)) {
-    // checking if the id is present in the database
-    const idEvaluation = targetRetrieverID(urlDatabase, req.params.id);
-    // If url id is present but not associated with current
-    // Login tokens
-    if (idEvaluation !== urlDatabase['generic'][req.params.id] || idEvaluation === false) {
-      // Return appropriate status
-      res.status(401);
-      req.session.urlAccessDenied = true;
-      return res.redirect('/urls');
-    }
-    // Otherwise, show url if it is a generic url
     templateVars.showLogin = true;
-    templateVars.longURL = urlDatabase['generic'][req.params.id];
-    req.session.urlAccessDenied = null;
-    return res.render('urls_show', templateVars);
+    res.status(401);
+    res.render('error_loginPrompt', templateVars);
   }
   // If user is logged in, authenticate all login tokens
   if (userDatabase[cookies.loginTokenID]) {

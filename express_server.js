@@ -21,12 +21,7 @@ const PORT = 8080;
 // <<------------------>>
 
 // URL Database - Stand in for a backend database
-const urlDatabase = {
-  generic: {
-    'b2xVn2': "http://lighthouselabs.ca",
-    '9sm5xK': "http://www.google.com",
-  },
-};
+const urlDatabase = {};
 
 // User database
 const userDatabase = {};
@@ -191,7 +186,6 @@ app.get('/urls/:id', (req, res) => {
     }
     // If tokens don't match, display error and redirect
     res.status(401);
-    req.session.urlAccessDenied = true;
     return res.render('error_notOwner', templateVars);
   }
 });
@@ -208,6 +202,7 @@ app.get('/u/:id', (req, res) => {
 
   // If url id exists, redirect
   let targetURL = targetRetrieverID(urlDatabase, id);
+
   // If url id doesn't exist, send 404 code
   if (!targetURL) {
     res.status(404);
@@ -258,11 +253,11 @@ app.put('/urls/:id', (req, res) => {
         }
       }
     }
-    // If authentication fails, redirect to current page
-    // Wipe cookies => auto redirect to /login
+
+    // If user is not owner of url
     res.status(401);
     cookieWiper(req);
-    return res.redirect(`/urls/${id}`);
+    return res.render('error_notOwner', templateVars);
   }
 });
 
@@ -385,36 +380,43 @@ app.post('/login', (req, res) => {
 
 // Handling post delete request from urls/:id/delete
 app.delete('/urls/:id/delete', (req, res) => {
-  // loginToken cookie values
   const cookies = req.session;
   const id = req.params.id;
-  // Validate login tokens
+  const templateVars = {
+    cookies: cookies,
+    id: id,
+  };
+
+  // If user is not logged in render error page
+  if (!loginCookieCheck(cookies)) {
+    templateVars.showLogin = true;
+    res.status(401);
+    return res.render('error_loginPrompt', templateVars);
+  }
+
+  // If user is logged in and the url is associated with user's id
+  // Delete url from database
   if (userDatabase[cookies.loginTokenID]) {
     if (loginCookieCheck(cookies)) {
-      // Validate if the url deleted is associated with id
       if (urlDatabase[cookies.loginTokenID][id]) {
         delete urlDatabase[cookies.loginTokenID][id];
         return res.redirect('/urls');
       }
     }
-    // If validation fails, send code 401, wipe cookies
-    res.status(401);
+    // If user is not associated with url
     cookieWiper(req);
+    res.status(401);
+    return res.render('error_notOwner', templateVars);
   }
-  // If url is not associated with an id, but is generic
-  // Send code 404 and redirect
-  if (urlDatabase['generic'][id]) {
-    res.status(404);
-    return res.redirect('/urls');
-  }
+  
   res.status(401);
-  return res.redirect('/urls');
+  return res.redirect('/login');
 });
 
 // Handling post request for /logout
 app.delete('/logout', (req, res) => {
   cookieWiper(req);
-  res.redirect('/login');
+  return res.redirect('/login');
 });
 
 // <<-------------->>

@@ -75,7 +75,7 @@ app.get('/urls', (req, res) => {
   if (!loginCookieCheck(cookies)) {
     templateVars.showLogin = true;
     res.status(401);
-    res.render('error_loginPrompt', templateVars);
+    return res.render('error_loginPrompt', templateVars);
   }
 
   // If client is logged in render urls_index with urls
@@ -167,13 +167,13 @@ app.get('/urls/:id', (req, res) => {
   if (!targetRetrieverID(urlDatabase, id)) {
     templateVars.showLogin = true;
     res.status(404);
-    res.render('error_noUrl', templateVars);
+    return res.render('error_noUrl', templateVars);
   }
   // If client is not logged in send error with login prompt
   if (!loginCookieCheck(cookies)) {
     templateVars.showLogin = true;
     res.status(401);
-    res.render('error_loginPrompt', templateVars);
+    return res.render('error_loginPrompt', templateVars);
   }
   // If client is logged in, check that url/id matches client id
   if (userDatabase[cookies.loginTokenID]) {
@@ -188,6 +188,7 @@ app.get('/urls/:id', (req, res) => {
     res.status(401);
     return res.render('error_notOwner', templateVars);
   }
+  return res.redirect('/urls');
 });
 
 // Route for short url redirect
@@ -244,21 +245,19 @@ app.put('/urls/:id', (req, res) => {
   // If user is logged in
   // check that the id associated with url matches the user's id
   if (userDatabase[cookies.loginTokenID]) {
-    if (tokenAuthenticator(cookies, userDatabase)) {
-      for (let userid in urlDatabase) {
-        if (userid[id] && userid === cookies.loginTokenID) {
-          templateVars.longURL = urlDatabase[cookies.loginTokenID][id];
-          urlDatabase[cookies.loginTokenID][id] = longURL;
-          return res.redirect(`/urls/${id}`);
-        }
+    for (let userid in urlDatabase) {
+      if (urlDatabase[userid][id] && userid === cookies.loginTokenID) {
+        templateVars.longURL = urlDatabase[cookies.loginTokenID][id];
+        urlDatabase[cookies.loginTokenID][id] = longURL;
+        return res.redirect(`/urls/${id}`);
       }
     }
 
     // If user is not owner of url
     res.status(401);
-    cookieWiper(req);
     return res.render('error_notOwner', templateVars);
   }
+  return res.redirect('/urls');
 });
 
 

@@ -221,14 +221,11 @@ app.get('/u/:id', (req, res) => {
 // <<---- EDIT ---->>
 // <<-------------->>
 
-// Handling post update request from urls/:id/
 app.put('/urls/:id', (req, res) => {
   // loginToken cookie values
   const cookies = req.session;
   const id = req.params.id;
   const longURL = req.body.longURL;
-  // Template vars contains urlDatabase subsets:
-  // Generic and object matched with loginTokenID
   const templateVars = {
     cookies: cookies,
     id: id,
@@ -242,19 +239,19 @@ app.put('/urls/:id', (req, res) => {
     return res.redirect(`/urls/${id}`);
   }
 
-  // If no login tokens, redirect to /login
-  // Send 401 code
+  // If user is not logged in render error page
   if (!loginCookieCheck(cookies)) {
+    templateVars.showLogin = true;
     res.status(401);
-    return res.redirect('/login');
+    return res.render('error_loginPrompt', templateVars);
   }
 
-  // If login tokens, validate
+  // If user is logged in
+  // check that the id associated with url matches the user's id
   if (userDatabase[cookies.loginTokenID]) {
     if (tokenAuthenticator(cookies, userDatabase)) {
-      // If tokens validate, update url id with new longURL
       for (let userid in urlDatabase) {
-        if (userid === cookies.loginTokenID) {
+        if (userid[id] && userid === cookies.loginTokenID) {
           templateVars.longURL = urlDatabase[cookies.loginTokenID][id];
           urlDatabase[cookies.loginTokenID][id] = longURL;
           return res.redirect(`/urls/${id}`);
@@ -274,7 +271,6 @@ app.put('/urls/:id', (req, res) => {
 // <<---- Add ----->>
 // <<-------------->>
 
-// Handling post request from urls/new
 app.post('/urls', (req, res) => {
   const cookies = req.session;
   const newkey = randomStringGen();
@@ -295,19 +291,17 @@ app.post('/urls', (req, res) => {
       urlDatabase[cookies.loginTokenID][newkey] = req.body.longURL;
       return res.redirect(`/urls/${newkey}`);
     }
-    // If the browser/client has loginToken cookies
+    // If the client has login tokens
     //  but they don't match any in the system
-    //  then redirect with generic
+    //  Render error page
     cookieWiper(req);
     res.status(401);
     return res.render('error_notOwner', templateVars);
   }
-  // Vague edge-cases, just redirect to generic
-  urlDatabase['generic'][newkey] = req.body.longURL;
+  
   return res.redirect('/urls');
 });
 
-// Handling post request for /regsiter
 app.post('/register', (req, res) => {
   const userId = randomStringGen();
   const password = req.body.password;

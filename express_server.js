@@ -165,7 +165,12 @@ app.get('/urls/:id', (req, res) => {
     longURL: null,
     cookies: cookies,
   };
-  
+  // If id does not exist, send error of no url found
+  if (!targetRetrieverID(urlDatabase, id)) {
+    templateVars.showLogin = true;
+    res.status(404);
+    res.render('error_noUrl', templateVars);
+  }
   // If client is not logged in send error with login prompt
   if (!loginCookieCheck(cookies)) {
     templateVars.showLogin = true;
@@ -184,7 +189,7 @@ app.get('/urls/:id', (req, res) => {
     // If tokens don't match, display error and redirect
     res.status(401);
     req.session.urlAccessDenied = true;
-    return res.redirect('/urls');
+    return res.render('error_notOwner', templateVars);
   }
 });
 

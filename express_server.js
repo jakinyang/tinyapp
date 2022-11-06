@@ -194,6 +194,7 @@ app.get('/urls/:id', (req, res) => {
 // Route for short url redirect
 app.get('/u/:id', (req, res) => {
   const id = req.params.id;
+  const { cookies } = req.session;
   const templateVars = {
     showLogin: false,
     id: id,

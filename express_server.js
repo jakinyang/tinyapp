@@ -330,7 +330,9 @@ app.post('/register', (req, res) => {
       password: hash,
     };
     urlDatabase[userId] = {};
-    return res.redirect('/login');
+    req.session.loginTokenID =  userId;
+    req.session.loginTokenEmail = email;
+    return res.redirect('/urls');
   }
 
   // Otherwise, they're already logged in
@@ -342,19 +344,18 @@ app.post('/login', (req, res) => {
   const password = req.body.password;
   const email = req.body.email;
   const cookies = req.session;
-  // Check for login cookies
+  // If user is not logged in
+  // Check for matching email and passwprds in the id
   if (!loginCookieCheck(cookies)) {
     for (let id in userDatabase) {
-      // Check for matching email and password for id
       if (userDatabase[id]['email'] === email && bcrypt.compareSync(password, userDatabase[id]['password'])) {
-        // Assign values in database to login tokens
+        // Assign values in database as cookies
         req.session.loginTokenID =  id;
         req.session.loginTokenEmail = email;
-        // If successful, clear any bad marker cookies
+
         if (req.session.badLogin) {
           req.session.badLogin = null;
         }
-        // Redirect to /urls with login cookies
         return res.redirect('/urls');
       }
     }
@@ -365,12 +366,11 @@ app.post('/login', (req, res) => {
       res.status(400);
       req.session.badLogin = true;
     }
+
     // Redirect to login and set response status to 403
     res.status(403);
     return res.redirect('/login');
   }
-  // If they are logged in
-  // They have all loginTokens
   return res.redirect('/urls');
 });
 

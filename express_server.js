@@ -38,7 +38,7 @@ app.use(morgan('dev'));
 
 app.use(cookieSession({
   name: "sesh",
-  keys: ['1a0b2c9d3e8', 'fOrTmOo2000'],
+  keys: ['1a0b2c9d3e8'],
 }));
 
 app.use(methodOverride('_method'));

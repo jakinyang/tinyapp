@@ -63,7 +63,7 @@ app.get('/', (req, res) => {
   if (!loginCookieCheck(cookies)) {
     return res.redirect("/login");
   }
-  return res.reditect("/urls");
+  return res.redirect("/urls");
 });
 
 

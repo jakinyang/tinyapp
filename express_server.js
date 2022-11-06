@@ -158,26 +158,28 @@ app.get('/login', (req, res) => {
 // Route to page for given id's url
 app.get('/urls/:id', (req, res) => {
   const cookies = req.session;
+  const id = req.params.id;
   const templateVars = {
     showLogin: false,
-    id: req.params.id,
+    id: id,
     longURL: null,
     cookies: cookies,
   };
   
-  // Check for login tokens
+  // If client is not logged in send error with login prompt
   if (!loginCookieCheck(cookies)) {
     templateVars.showLogin = true;
     res.status(401);
     res.render('error_loginPrompt', templateVars);
   }
-  // If user is logged in, authenticate all login tokens
+  // If client is logged in, check that url/id matches client id
   if (userDatabase[cookies.loginTokenID]) {
     if (tokenAuthenticator(cookies, userDatabase)) {
-      // If tokens match, display url for that id
-      templateVars.longURL = urlDatabase[cookies.loginTokenID][req.params.id];
-      req.session.urlAccessDenied = null;
-      return res.render('urls_show', templateVars);
+      if (urlDatabase[cookies.loginTokenID][id]) {
+        templateVars.longURL = urlDatabase[cookies.loginTokenID][req.params.id];
+        req.session.urlAccessDenied = null;
+        return res.render('urls_show', templateVars);
+      }
     }
     // If tokens don't match, display error and redirect
     res.status(401);

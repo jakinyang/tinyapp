@@ -332,6 +332,7 @@ app.post('/register', (req, res) => {
       email,
       password: hash,
     };
+    urlDatabase[userId] = {};
     return res.redirect('/login');
   }
 

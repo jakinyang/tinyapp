@@ -63,6 +63,7 @@ app.get('/', (req, res) => {
   if (!loginCookieCheck(cookies)) {
     return res.redirect("/login");
   }
+
   return res.redirect("/urls");
 });
 
@@ -89,6 +90,7 @@ app.get('/urls', (req, res) => {
       templateVars.urls = urlDatabase[cookies.loginTokenID];
       return res.render('urls_index', templateVars);
     }
+
     // If validation fails, wipe cookies, redirect to /login
     res.status(400);
     cookieWiper(req);
@@ -102,6 +104,7 @@ app.get('/urls/new', (req, res) => {
     showLogin: false,
     cookies: cookies,
   };
+
   // Redirect to login if not logged in
   if (!loginCookieCheck(cookies)) {
     res.status(401);
@@ -195,12 +198,20 @@ app.get('/urls/:id', (req, res) => {
 
 // Route for short url redirect
 app.get('/u/:id', (req, res) => {
+  const id = req.params.id;
+  const templateVars = {
+    showLogin: false,
+    id: id,
+    longURL: null,
+    cookies: cookies,
+  };
+
   // If url id exists, redirect
-  let targetURL = targetRetrieverID(urlDatabase, req.params.id);
+  let targetURL = targetRetrieverID(urlDatabase, id);
   // If url id doesn't exist, send 404 code
   if (!targetURL) {
     res.status(404);
-    return res.send('Code 404: Cannot find url id');
+    return res.render('error_noUrl', templateVars);
   }
   
   return res.redirect(targetURL);
@@ -279,10 +290,6 @@ app.post('/urls', (req, res) => {
   // Checking that login tokens are all intermatching
   if (userDatabase[cookies.loginTokenID]) {
     if (tokenAuthenticator(cookies, userDatabase)) {
-      if (!urlDatabase[cookies.loginTokenID]) {
-        // If first time making new tinyURL, initialize object for ID
-        urlDatabase[cookies.loginTokenID] = {};
-      }
       // Post long url and ID in object at loginTokenID
       urlDatabase[cookies.loginTokenID][newkey] = req.body.longURL;
       return res.redirect(`/urls/${newkey}`);

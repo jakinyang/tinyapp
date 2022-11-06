@@ -276,21 +276,22 @@ app.put('/urls/:id', (req, res) => {
 
 // Handling post request from urls/new
 app.post('/urls', (req, res) => {
-  // loginToken cookie values
   const cookies = req.session;
-  // New random short urlID
   const newkey = randomStringGen();
-
-  // Checking for login tokens -->> if not logged in
-  if (!loginCookieCheck(cookies)) {
-    res.status(401);
-    res.send("Permission Denied");
-    return res.redirect('/login');
+  const templateVars = {
+    cookies: cookies,
   }
-  // Checking that login tokens are all intermatching
+
+  // If user is not logged in send code 401, render error page
+  if (!loginCookieCheck(cookies)) {
+    templateVars.showLogin = true;
+    res.status(401);
+    return res.render('error_loginPrompt', templateVars);
+  }
+  // If user is logged in and login token is valid
+  // Create new url with random key
   if (userDatabase[cookies.loginTokenID]) {
     if (tokenAuthenticator(cookies, userDatabase)) {
-      // Post long url and ID in object at loginTokenID
       urlDatabase[cookies.loginTokenID][newkey] = req.body.longURL;
       return res.redirect(`/urls/${newkey}`);
     }
@@ -298,8 +299,8 @@ app.post('/urls', (req, res) => {
     //  but they don't match any in the system
     //  then redirect with generic
     cookieWiper(req);
-    urlDatabase['generic'][newkey] = req.body.longURL;
-    return res.redirect('/urls');
+    res.status(401);
+    return res.render('error_notOwner', templateVars);
   }
   // Vague edge-cases, just redirect to generic
   urlDatabase['generic'][newkey] = req.body.longURL;
